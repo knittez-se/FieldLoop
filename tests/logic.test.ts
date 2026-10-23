@@ -242,3 +242,12 @@ test("briefing, impact and timeline are derived from the data", () => {
   const kap08 = t.byField["KAP-08"].map((x) => x.value as number);
   assert.ok(kap08[9] < kap08[5] - 0.1, "the spreading problem is visible in the time-lapse");
 });
+
+test("briefing does not repeat the farmer report when it is the only reason", () => {
+  const now = new Date("2026-10-23T12:00:00Z");
+  const s = createSeedState(BUILTIN_FIELD_DATA, now);
+  for (const a of s.anomalies) a.source = "farmer_report"; // every task now comes from a farmer report alone
+  const top = activeInspections(s, now)[0];
+  s.observations.push({ ...s.observations[0], inspectionId: top.task.id, authorRole: "farmer" });
+  assert.doesNotMatch(todayBriefing(s, now).detail, /also reported/);
+});

@@ -198,7 +198,9 @@ export function todayBriefing(state: AppState, now = new Date()): { headline: st
   const top = queue[0];
   const anomaly = state.anomalies.find((a) => top.task.anomalyIds.includes(a.id));
   const why = anomaly?.observed ?? top.task.reason;
-  const farmerReport = state.observations.some((o) => o.inspectionId === top.task.id && o.authorRole === "farmer");
+  // If the reason itself came from a farmer, `why` already is that report; only mention it next to another signal.
+  const whyIsFarmer = !anomaly || anomaly.source === "farmer_report";
+  const farmerReport = !whyIsFarmer && state.observations.some((o) => o.inspectionId === top.task.id && o.authorRole === "farmer");
   return {
     headline: `${fieldsNeeding} of ${total} fields need a visit. Start with ${top.field?.name ?? top.task.fieldId}.`,
     detail: `${why.split(/(?<=\.)\s/)[0]}${farmerReport ? " The farmer also reported a problem." : ""}`,
