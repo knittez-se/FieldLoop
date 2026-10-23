@@ -13,6 +13,7 @@ import {
   useAppState,
 } from "@/lib/store";
 import { scoreInspection } from "@/lib/priority";
+import { analyzeReport, buildReportInput, type ReportAnalysis } from "@/lib/agent/report";
 import { OUTCOME_LABEL } from "@/lib/labels";
 import type { InspectionOutcome } from "@/lib/types";
 import { PhotoInput } from "@/components/photo-input";
@@ -26,30 +27,6 @@ const OUTCOMES: Array<{ id: InspectionOutcome; hint: string }> = [
   { id: "needs_follow_up", hint: "Needs another visit" },
 ];
 
-interface ReportSuggestion {
-  mode?: string;
-  outcome: InspectionOutcome;
-  summary: string;
-  openQuestions?: string[];
-  followUp?: string;
-}
-
-const OUTCOME_SET = new Set<InspectionOutcome>(["issue_confirmed", "no_issue_found", "needs_follow_up"]);
-
-function asSuggestion(value: unknown): ReportSuggestion | null {
-  if (!value || typeof value !== "object") return null;
-  const row = value as Record<string, unknown>;
-  if (typeof row.outcome !== "string" || !OUTCOME_SET.has(row.outcome as InspectionOutcome)) return null;
-  if (typeof row.summary !== "string" || row.summary.trim().length < 8) return null;
-  return {
-    mode: typeof row.mode === "string" ? row.mode : undefined,
-    outcome: row.outcome as InspectionOutcome,
-    summary: row.summary.trim(),
-    openQuestions: Array.isArray(row.openQuestions) ? row.openQuestions.filter((item): item is string => typeof item === "string") : [],
-    followUp: typeof row.followUp === "string" ? row.followUp : undefined,
-  };
-}
-
 export function VisitScreen({ inspectionId }: { inspectionId: string }) {
   const state = useAppState();
   const [note, setNote] = useState("");
@@ -58,7 +35,7 @@ export function VisitScreen({ inspectionId }: { inspectionId: string }) {
   const [recommendation, setRecommendation] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [followUpId, setFollowUpId] = useState<string | null>(null);
-  const [suggestion, setSuggestion] = useState<ReportSuggestion | null>(null);
+  const [suggestion, setSuggestion] = useState<ReportAnalysis | null>(null);
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [suggesting, setSuggesting] = useState(false);
 
@@ -86,52 +63,48 @@ export function VisitScreen({ inspectionId }: { inspectionId: string }) {
     if (findings.trim().length < 10) return setFormError("Write what you actually saw, in a short sentence.");
     setFormError(null);
     if (note.trim()) saveNote();
-    const result = completeInspection(task!.id, { outcome, confirmedFindings: findings, recommendation });
+    const result = completeInspection(task!.id, {
+      outcome,
+      confirmedFindings: findings,
+      recommendation,
+      aiAssist: suggestion
+        ? {
+            mode: suggestion.mode,
+            suggestedOutcome: suggestion.suggestedOutcome,
+            outcomeAccepted: outcome === suggestion.suggestedOutcome,
+          }
+        : undefined,
+    });
     setFollowUpId(result.followUpId ?? null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function askSuggestion() {
+    if (!state) return;
     setSuggesting(true);
     setSuggestError(null);
-    setSuggestion(null);
-    const anomaly = state!.anomalies.find((item) => task!.anomalyIds.includes(item.id));
-    try {
-      const response = await fetch("/api/process-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fieldId: task!.fieldId,
-          fieldName: field?.name,
-          notes: task!.notes.map((item) => item.text),
-          draftNote: note.trim(),
-          checksDone: task!.suggestedChecks.filter((check) => check.done).map((check) => check.label),
-          findings: findings.trim(),
-          anomalyObserved: anomaly?.observed,
-        }),
-      });
-      if (response.status === 404) {
-        setSuggestError("Outcome suggestion is not connected yet. Choose the outcome yourself.");
-        return;
-      }
-      const body: unknown = await response.json().catch(() => null);
-      const parsed = asSuggestion(body);
-      if (!response.ok || !parsed) {
-        setSuggestError("The suggestion service did not return a usable outcome. Choose it yourself.");
-        return;
-      }
-      setSuggestion(parsed);
-    } catch {
-      setSuggestError("Could not reach the suggestion service. Choose the outcome yourself.");
-    } finally {
+    const draft = [note.trim(), findings.trim()].filter(Boolean).join("\n\n");
+    const input = buildReportInput(state, task!.id, { findingsDraft: draft || undefined });
+    if (!input) {
       setSuggesting(false);
+      setSuggestError("This visit has no field record to analyze.");
+      return;
     }
+    if (input.notes.length === 0 && !input.findingsDraft) {
+      setSuggesting(false);
+      setSuggestError("Write a note or what you saw first. The suggestion only uses your words.");
+      return;
+    }
+    const analysis = await analyzeReport(input);
+    setSuggestion(analysis);
+    if (analysis.warning) setSuggestError(analysis.warning);
+    setSuggesting(false);
   }
 
-  function acceptSuggestion(next: ReportSuggestion) {
-    setOutcome(next.outcome);
-    if (!findings.trim()) setFindings(next.summary);
-    if (next.followUp && !recommendation.trim()) setRecommendation(next.followUp);
+  function acceptSuggestion(next: ReportAnalysis) {
+    setOutcome(next.suggestedOutcome);
+    if (!findings.trim()) setFindings(next.findingsSummary);
+    if (next.followUp.action && !recommendation.trim()) setRecommendation(next.followUp.action);
   }
 
   return (
@@ -271,12 +244,20 @@ export function VisitScreen({ inspectionId }: { inspectionId: string }) {
           {suggestion && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
               <p className="text-xs font-semibold uppercase tracking-wide">
-                Suggestion{suggestion.mode === "llm" ? " from the model" : " · demo rules"} — not saved yet
+                {suggestion.mode === "llm" ? "Model suggestion" : "Demo-rule suggestion"} — not saved yet
               </p>
-              <p className="mt-1 font-medium">{OUTCOME_LABEL[suggestion.outcome]}</p>
-              <p className="mt-1">{suggestion.summary}</p>
-              {suggestion.followUp && <p className="mt-1 text-amber-900">Follow-up: {suggestion.followUp}</p>}
-              <p className="mt-2 text-xs">Photos were not analyzed. Edit the text before you complete the visit.</p>
+              <p className="mt-1 font-medium">{OUTCOME_LABEL[suggestion.suggestedOutcome]}</p>
+              <p className="mt-1">{suggestion.outcomeReason}</p>
+              <p className="mt-1">{suggestion.findingsSummary}</p>
+              {suggestion.followUp.action && <p className="mt-1 text-amber-900">Follow-up: {suggestion.followUp.action}</p>}
+              {suggestion.openQuestions.length > 0 && (
+                <ul className="mt-2 list-disc space-y-0.5 pl-4 text-xs">
+                  {suggestion.openQuestions.map((question) => (
+                    <li key={question}>{question}</li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-2 text-xs">{suggestion.disclaimer}</p>
               <Button size="sm" className="mt-2" onClick={() => acceptSuggestion(suggestion)}>
                 Use this suggestion
               </Button>

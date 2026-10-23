@@ -14,13 +14,12 @@ import {
   UserRound,
 } from "lucide-react";
 import { useAppState } from "@/lib/store";
-import { activeInspections, adviserName, dashboardStats, mapStatus } from "@/lib/selectors";
+import { activeInspections, adviserName, dashboardStats, lastQueueChange, mapStatus } from "@/lib/selectors";
 import { relativeTime } from "@/lib/format";
 import { OUTCOME_LABEL, CATEGORY_LABEL } from "@/lib/labels";
 import { ActivityFeed } from "@/components/activity-feed";
 import { FieldMap, MapLegend } from "@/components/field-map";
 import { QueueShiftBanner } from "@/components/queue-shift";
-import { latestQueueShift } from "@/lib/ui-queue";
 import {
   Badge,
   Button,
@@ -51,8 +50,7 @@ export default function OverviewPage() {
   const { stats, queue, status } = derived;
   const top = queue[0];
   const user = state.advisers.find((a) => a.id === state.settings.currentUserId);
-  const shift = latestQueueShift(state);
-  const promotedTaskId = shift?.nowFirst && shift.nowFirst.fieldId !== shift.completedFieldId ? shift.nowFirst.taskId : undefined;
+  const promotedTaskId = lastQueueChange(state)?.moves.find((move) => move.toRank === 1 && move.movement !== "same")?.inspectionId;
 
   const recentReports = [
     ...state.reports.map((r) => ({
