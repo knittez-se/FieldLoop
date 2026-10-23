@@ -47,6 +47,11 @@ export function FieldMap(props: FieldMapProps) {
   const LRef = useRef<LeafletModule | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const colorForRef = useRef(colorFor);
+  colorForRef.current = colorFor;
+  /** Field polygons by id, so a colorFor change (time-lapse frames) can repaint without a full redraw. */
+  const polysRef = useRef(new Map<string, Leaflet.Polygon>());
+  const hasColorFor = !!colorFor;
   /** Key of the field set the map was last fitted to; refit when the data changes (e.g. data/ files loaded). */
   const fittedRef = useRef<string | null>(null);
 
@@ -100,17 +105,19 @@ export function FieldMap(props: FieldMapProps) {
     const group = layerRef.current;
     if (loadState !== "ready" || !L || !map || !group) return;
     group.clearLayers();
+    polysRef.current.clear();
 
     fields.forEach((field) => {
       const st = status[field.id] ?? { level: "ok", hasActiveInspection: false };
-      const color = colorFor?.(field.id) ?? PRIORITY_COLOR[st.level];
+      const color = colorForRef.current?.(field.id) ?? PRIORITY_COLOR[st.level];
       const selected = field.id === selectedId;
       const poly = L.polygon(field.boundary, {
         color: selected ? "#111827" : color,
         weight: selected ? 4 : 2,
         fillColor: color,
-        fillOpacity: colorFor ? 0.8 : selected ? 0.45 : 0.28,
+        fillOpacity: hasColorFor ? 0.8 : selected ? 0.45 : 0.28,
       }).on("click", () => onSelectRef.current?.(field.id));
+      polysRef.current.set(field.id, poly);
       if (compact || fields.length > 12) {
         poly.bindTooltip(`<strong>${field.name}</strong><br/>${field.id} · ${field.areaHa} ha`, { sticky: true });
       } else {
@@ -154,7 +161,16 @@ export function FieldMap(props: FieldMapProps) {
       map.fitBounds(bounds, { padding: [24, 24] });
       fittedRef.current = fitKey;
     }
-  }, [fields, status, anomalies, selectedId, loadState, colorFor]);
+  }, [fields, status, anomalies, selectedId, loadState, hasColorFor]);
+
+  // Repaint only (no redraw) when colorFor changes, e.g. every time-lapse frame or a quiz tap.
+  useEffect(() => {
+    if (!colorFor) return;
+    polysRef.current.forEach((poly, id) => {
+      const color = colorFor(id);
+      if (color) poly.setStyle({ color: id === selectedId ? "#111827" : color, fillColor: color });
+    });
+  }, [colorFor, selectedId]);
 
   // Pan to the selected field.
   useEffect(() => {
