@@ -37,33 +37,51 @@ We want to be upfront about this.
 
 | Part | Status |
 | --- | --- |
-| Satellite data (Sentinel-2) | TODO: fill in, real or sample data |
-| Weather data | TODO: fill in, real or sample data |
+| Satellite data (Sentinel-2) | Real. Weekly greenness (NDVI) per field for the last 10 weeks, from Sentinel-2 L2A images, with cloudy readings skipped |
+| Weather data | Real. Daily rainfall from Open-Meteo for the same 10 weeks |
 | Ranking and explanations by the AI agent | TODO: fill in |
 | Voice or photo field report | TODO: fill in |
-| Cooperative, advisors and field boundaries | Simulated for the demo |
-| Problem signals in the demo fields | Simulated for the demo, clearly labeled in the app |
+| Field boundaries | Real farm plots west of Kitale, Kenya, traced by hand over satellite photos and checked against ESA WorldCover (81 to 100% cropland). We do not know what crop is planted in each one |
+| Cooperative and advisors | Simulated for the demo |
+| Problem signals in the demo fields | One planted problem: field F1's last 3 weekly readings are lowered and labeled `simulated` in the data. The other 77 readings are real. Real fields all dip together before harvest, so without this no single field stands out |
 
 ## Tech stack
 
-TODO: update to match what was actually built.
+Data side (`scripts/`, writes the files in `data/`):
 
-- Python
-- Streamlit for the interface
-- Sentinel-2 satellite imagery (free, from the European Space Agency's Copernicus program)
-- A free weather API
+- Python, with `pystac-client` to search the satellite catalog
+- Sentinel-2 L2A imagery (free, from the European Space Agency's Copernicus program), accessed through Microsoft Planetary Computer. Their server computes each field's average NDVI and cloud mask, so we only download numbers, never whole images
+- Open-Meteo for daily rainfall (free, no key)
+- ESA WorldCover 2021 to check that the field outlines are cropland
+
+App side: TODO, update to match what was actually built.
+
 - A large language model API for ranking, explanations and report handling
 
 ## Run it locally
 
-TODO: replace with the real steps once the prototype runs.
+```bash
+git clone https://github.com/knittez-se/Polaris-Hackathon---FarmSignal.git
+cd Polaris-Hackathon---FarmSignal
+```
+
+### Data scripts
+
+The data files in `data/` are already committed, so you only need this to refresh them. No API keys needed.
 
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
 pip install -r requirements.txt
-streamlit run app.py
+python scripts/test_access.py         # check that satellite access works (lists images, one field's NDVI)
+python scripts/build_field_scores.py  # data/field_scores.csv: weekly NDVI per field, about 20 seconds
+python scripts/fetch_weather.py       # data/weather.csv: daily rainfall
+python scripts/make_sample_data.py    # optional: overwrite both files with fully simulated data
 ```
+
+The field outlines in `data/fields.geojson` were traced by hand and are not made by a script.
+
+### App
+
+TODO: replace with the real steps once the prototype runs.
 
 If the app needs API keys, copy `.env.example` to `.env` and add them there. Never commit real keys.
 
@@ -94,5 +112,5 @@ Ideas beyond the hackathon, not built yet:
 
 ## Acknowledgements
 
-Satellite data from the Copernicus Sentinel-2 mission (ESA). Weather data: TODO.
+Satellite data from the Copernicus Sentinel-2 mission (ESA), served by Microsoft Planetary Computer. Land cover from ESA WorldCover 2021. Weather data from Open-Meteo.com. Field outlines traced over Esri World Imagery.
 
