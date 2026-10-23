@@ -38,6 +38,14 @@ The app ships with a fictional cooperative (Nzoia Valley Maize Cooperative, Tran
 
 *Reset demo* is in the sidebar and under Overview, and on Settings. Use it before each run.
 
+Screens from this branch:
+
+![Overview](docs/screenshots/overview-desktop.png)
+
+![Phone visit](docs/screenshots/visit-phone.png)
+
+![Case history](docs/screenshots/field-desktop.png)
+
 *Settings → Reset demo data* restores the scenario before each run.
 
 ## Field data (shared with the data script)
