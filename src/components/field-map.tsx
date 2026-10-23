@@ -42,7 +42,8 @@ export function FieldMap(props: FieldMapProps) {
   const LRef = useRef<LeafletModule | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
-  const fittedRef = useRef(false);
+  /** Key of the field set the map was last fitted to; refit when the data changes (e.g. data/ files loaded). */
+  const fittedRef = useRef<string | null>(null);
 
   const [loadState, setLoadState] = useState<"loading" | "ready" | "failed">("loading");
   const [tilesFailed, setTilesFailed] = useState(false);
@@ -83,7 +84,7 @@ export function FieldMap(props: FieldMapProps) {
       mapRef.current?.remove();
       mapRef.current = null;
       layerRef.current = null;
-      fittedRef.current = false;
+      fittedRef.current = null;
     };
   }, [compact]);
 
@@ -142,10 +143,11 @@ export function FieldMap(props: FieldMapProps) {
         );
       });
 
-    if (!fittedRef.current && fields.length) {
+    const fitKey = fields.map((f) => `${f.id}:${f.centroid.join(",")}`).join("|");
+    if (fittedRef.current !== fitKey && fields.length) {
       const bounds = L.latLngBounds(fields.flatMap((f) => f.boundary));
       map.fitBounds(bounds, { padding: [24, 24] });
-      fittedRef.current = true;
+      fittedRef.current = fitKey;
     }
   }, [fields, status, anomalies, selectedId, loadState]);
 

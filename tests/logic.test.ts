@@ -156,7 +156,7 @@ test("report: leaf rolling + dry soil + no insects → issue confirmed, water st
   assert.equal(a.suggestedOutcome, "issue_confirmed");
   assert.ok(a.supported.some((s) => s.hypothesis === "water_stress"));
   assert.ok(a.ruledOut.some((s) => s.hypothesis === "pests"));
-  assert.match(a.findingsSummary, /Leaf rolling on 15 of 20 plants/);
+  assert.equal(a.findingsSummary, "Leaf rolling on 15 of 20 plants in the NE corner. Soil dry at 15 cm. No insects in whorls.");
   assert.equal(a.followUp.inDays, 5);
   assert.ok(a.openQuestions.some((q) => /photo/i.test(q)));
 });

@@ -210,7 +210,10 @@ export function analyzeReportDemo(input: ReportInput): ReportAnalysis {
   }
 
   // Findings summary: only the adviser's own sentences that carry evidence (no new facts).
-  const evidenceSentences = Array.from(new Set([...supported, ...ruledOut].map((x) => x.evidence)));
+  // Every sentence that matches any rule (symptom or ruled-out cause), in the adviser's original order.
+  const evidenceSentences = sents.filter((sent) =>
+    RULES.some((r) => [...r.patterns, ...r.negations].some((re) => re.test(sent.toLowerCase()))),
+  );
   const findingsSummary = tooShort
     ? ""
     : (evidenceSentences.length ? evidenceSentences : sents.slice(0, 3)).map((s) => s.replace(/[.;]+$/, "")).join(". ") + ".";
