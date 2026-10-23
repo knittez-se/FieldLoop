@@ -134,3 +134,31 @@ Goal: the 3-minute demo from MVP.md is fast, clear and looks good on a laptop an
 - The five MVP steps can be shown in under 3 minutes without searching for buttons.
 - Phone view works for the adviser part.
 - README screenshots and demo steps match the app.
+
+---
+
+# Round 2: showcase, onboarding quiz, wow effects
+
+Plan and reasoning: `docs/COMPETITOR_RESEARCH.md` (Part 2). Same split and branches as before: A on `dev`, B on its own branch from `dev`.
+
+## A provides (in `src/lib/`)
+
+| Export | File | What B does with it |
+| --- | --- | --- |
+| `settings.dataMode: "showcase" \| "real"`, action `setDataMode(mode)` | `store.ts` | A switch "Showcase data / Real data (Kitale)" in Settings and on the quiz end screen. Showcase is the default. |
+| `REGIONS`, `CROPS`, `type OnboardingProfile` | `onboarding.ts` | Quiz options. Each region has `center` and `zoom` for the map. |
+| `state.profile` (`OnboardingProfile \| undefined`), actions `completeOnboarding(profile)`, `resetOnboarding()` | `store.ts` | Show the quiz when `state.profile` is undefined. `completeOnboarding` rebuilds the demo for the chosen fields. |
+| `candidateFields(state)` | `onboarding.ts` | All plots the user can pick in quiz step 4 (outline, crop, area). |
+| `todayBriefing(state)` → `{ headline, detail, inspectionId? }` | `selectors.ts` | One sentence + one button at the top of the Overview. |
+| `weeklyCapacity(state)` → `{ visitsNeeded, advisers, visitsPerAdviserDay, adviserDays, fits }` | `selectors.ts` | "5 of 41 fields need a visit — about 1 adviser-day." |
+| `impactSummary(state)` → `{ fieldsMonitored, hectares, needVisit, visitsAvoidedPct, casesClosed30d }` | `selectors.ts` | Impact line / tiles. |
+| `greennessTimeline(state)` → `{ weeks: string[], byField: Record<fieldId, Array<{ value: number \| null, simulated: boolean }>> }` | `selectors.ts` | Time-lapse: play button + week slider, color each field by its value that week. |
+| `Field.crop` (string, e.g. `"maize"`, `"beans"`) | `types.ts` | Crop chips and labels. |
+
+## B builds
+
+1. **Onboarding quiz** (5 steps, skippable with "Use demo farms"): role → region (map centers) → crops + hectares → pick fields on the map (tap to select, "Select all") → advisers (adviser/NGO only). End screen: summary + data-mode switch + "Go to Today".
+2. **Time-lapse on the map**: play/pause + week slider using `greennessTimeline`. Color scale from brown (low) to green (high). Simulated weeks get a small "simulated" mark.
+3. **Simpler Overview ("Today")**: `todayBriefing` + one big button first, then the queue, then capacity/impact, then the rest.
+4. **Field page**: summary first ("Why flagged" + "What to check" + Start visit), the six-part assessment inside a collapsible "Evidence" section.
+5. Navigation labels: Today, Map, Visits, Reports; Settings as an icon.
