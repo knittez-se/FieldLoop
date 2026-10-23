@@ -11,7 +11,7 @@
  *
  * The cooperative, farmers and advisers are fictional.
  */
-import { detectChanges, type Detection } from "./detection";
+import { detectChanges, detectionSkips, type Detection } from "./detection";
 import { hashPayload, type FieldDataPayload, type FieldInput } from "./field-data";
 import type {
   ActivityEvent,
@@ -26,7 +26,7 @@ import type {
   WeatherObservation,
 } from "./types";
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 const DAY = 24 * 60 * 60 * 1000;
 const DEFAULT_CENTER: LatLng = [1.04, 35.0];
@@ -105,7 +105,9 @@ function anomalyFromDetection(d: Detection, id: string, field: Field, now: Date)
     confidenceNote:
       (d.confidence === "medium"
         ? `The decline is consistent over ${d.consecutiveDrops} readings, so it is unlikely to be one-off noise.`
-        : "The change is small or short, so it may be noise.") + ` Based on ${dataNote}. Says nothing about the cause.`,
+        : "The change is small or short, so it may be noise.") +
+      (d.caveats.length ? ` ${d.caveats.join(" ")}` : "") +
+      ` Based on ${dataNote}. Says nothing about the cause.`,
     verifyOnSite: [
       "Walk the field and compare 20 plants in the affected part with a healthy part.",
       "Check soil moisture at 10–20 cm depth.",
@@ -439,7 +441,16 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
     reports,
     weather,
     activity: activity.sort((a, b) => b.at.localeCompare(a.at)),
+    queueChanges: [],
     settings: { currentUserId: "adv-grace", liveWeather: false },
-    data: { hash: hashPayload(payload), origin: payload.origin, warnings: payload.warnings, payload },
+    data: {
+      hash: hashPayload(payload),
+      origin: payload.origin,
+      warnings: [
+        ...payload.warnings,
+        ...detectionSkips(inputs).map((s) => `Change detection skipped field ${s.fieldId}: ${s.reason}.`),
+      ],
+      payload,
+    },
   };
 }

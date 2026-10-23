@@ -3,7 +3,7 @@
  * Every dashboard number is computed here from the underlying data — nothing is hardcoded.
  */
 import { daysBetween, scoreInspection, type PriorityResult } from "./priority";
-import type { Anomaly, AppState, Field, InspectionTask, Priority } from "./types";
+import type { Anomaly, AppState, Field, InspectionTask, Priority, QueueChange } from "./types";
 
 export interface RankedInspection {
   task: InspectionTask;
@@ -129,4 +129,57 @@ export function recommendedNextSteps(state: AppState, field: Field, now = new Da
   if (!status.task && (since === undefined || since > 21)) steps.push("Schedule a routine visit — no inspection in the last 3 weeks.");
   if (steps.length === 0) steps.push("No action needed. Continue routine monitoring.");
   return Array.from(new Set(steps));
+}
+
+export interface QueueMove {
+  inspectionId: string;
+  fieldId: string;
+  fieldName: string;
+  fromRank: number | null; // 1-based, null = was not in the queue
+  toRank: number | null; // null = left the queue (completed)
+  movement: "new" | "resolved" | "up" | "down" | "same";
+  score: number;
+}
+
+export interface QueueChangeView {
+  id: string;
+  at: string;
+  cause: QueueChange["cause"];
+  fieldId: string;
+  inspectionId?: string;
+  /** One sentence for a banner, e.g. "Kapsara East Block resolved — Saboti Upper Field is now #1." */
+  headline: string;
+  moves: QueueMove[];
+}
+
+/** The most recent queue change (or the one with `id`), with per-inspection rank movements. */
+export function lastQueueChange(state: AppState, id?: string): QueueChangeView | null {
+  const list = state.queueChanges ?? [];
+  const change = id ? list.find((c) => c.id === id) : list[0];
+  if (!change) return null;
+  const name = (fieldId: string) => state.fields.find((f) => f.id === fieldId)?.name ?? fieldId;
+  const ids = Array.from(new Set([...change.before, ...change.after].map((e) => e.inspectionId)));
+  const moves: QueueMove[] = ids.map((inspectionId) => {
+    const b = change.before.findIndex((e) => e.inspectionId === inspectionId);
+    const a = change.after.findIndex((e) => e.inspectionId === inspectionId);
+    const entry = change.after[a] ?? change.before[b];
+    const fromRank = b >= 0 ? b + 1 : null;
+    const toRank = a >= 0 ? a + 1 : null;
+    const movement: QueueMove["movement"] =
+      fromRank === null ? "new" : toRank === null ? "resolved" : toRank < fromRank ? "up" : toRank > fromRank ? "down" : "same";
+    return { inspectionId, fieldId: entry.fieldId, fieldName: name(entry.fieldId), fromRank, toRank, movement, score: entry.score };
+  });
+  moves.sort((x, y) => (x.toRank ?? 999) - (y.toRank ?? 999));
+
+  const causeName = name(change.fieldId);
+  const top = change.after[0];
+  const topText = top ? `${name(top.fieldId)} is now #1` : "no inspections left in the queue";
+  const newRank = moves.find((m) => m.inspectionId === change.inspectionId)?.toRank;
+  const headline =
+    change.cause === "inspection_completed"
+      ? `${causeName} inspection completed — ${topText}.`
+      : change.cause === "inspection_created"
+        ? `New inspection for ${causeName}${newRank ? ` at #${newRank}` : ""} — ${topText}.`
+        : `Ground report for ${causeName} changed the ranking — ${topText}.`;
+  return { id: change.id, at: change.at, cause: change.cause, fieldId: change.fieldId, inspectionId: change.inspectionId, headline, moves };
 }

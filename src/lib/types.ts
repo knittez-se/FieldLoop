@@ -167,6 +167,13 @@ export interface InspectionReport {
   recommendation: string;
   photos: string[];
   checksCompleted: string[];
+  /** Set when the AI report analysis was used. The adviser always confirms the final text. */
+  aiAssist?: {
+    mode: "demo" | "llm";
+    suggestedOutcome: InspectionOutcome;
+    /** true if the adviser saved the suggested outcome unchanged */
+    outcomeAccepted: boolean;
+  };
 }
 
 export interface WeatherObservation {
@@ -196,6 +203,25 @@ export interface ActivityEvent {
   inspectionId?: string;
 }
 
+/** One entry of the active inspection queue at a point in time. */
+export interface QueueEntry {
+  inspectionId: string;
+  fieldId: string;
+  score: number;
+  level: Priority;
+}
+
+/** How the queue changed after an event (completion, new report …). */
+export interface QueueChange {
+  id: string;
+  at: string;
+  cause: "inspection_completed" | "inspection_created" | "observation_added";
+  inspectionId?: string;
+  fieldId: string;
+  before: QueueEntry[];
+  after: QueueEntry[];
+}
+
 export interface AppSettings {
   currentUserId: string;
   liveWeather: boolean;
@@ -222,5 +248,7 @@ export interface AppState {
     payload: import("./field-data").FieldDataPayload;
   };
   activity: ActivityEvent[];
+  /** Latest first, max 20. */
+  queueChanges: QueueChange[];
   settings: AppSettings;
 }

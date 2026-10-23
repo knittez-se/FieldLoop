@@ -89,7 +89,24 @@ export function parseFieldScores(text: string, warnings: string[]): Map<string, 
   });
   if (skipped) warnings.push(`field_scores.csv: skipped ${skipped} invalid row(s)`);
   if (iSrc < 0) warnings.push("field_scores.csv: no source column — all readings treated as simulated");
-  result.forEach((list) => list.sort((a, b) => a.date.localeCompare(b.date)));
+  // Sort by date and average several readings on the same date (e.g. two images in one week).
+  let merged = 0;
+  result.forEach((list, id) => {
+    const byDate = new Map<string, Reading[]>();
+    list.forEach((r) => byDate.set(r.date, [...(byDate.get(r.date) ?? []), r]));
+    if (byDate.size < list.length) merged += list.length - byDate.size;
+    result.set(
+      id,
+      [...byDate.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, rs]) => ({
+          date,
+          greenness: +(rs.reduce((s, r) => s + r.greenness, 0) / rs.length).toFixed(4),
+          source: rs.every((r) => r.source === "real") ? "real" : "simulated",
+        })),
+    );
+  });
+  if (merged) warnings.push(`field_scores.csv: averaged ${merged} duplicate reading(s) on the same field and date`);
   return result;
 }
 

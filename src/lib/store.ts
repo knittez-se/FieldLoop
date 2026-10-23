@@ -17,6 +17,7 @@ import { useSyncExternalStore } from "react";
 import { BUILTIN_FIELD_DATA } from "./builtin-field-data";
 import { createSeedState, STATE_VERSION } from "./demo-data";
 import { hashPayload, type FieldDataPayload } from "./field-data";
+import { activeInspections } from "./selectors";
 import { CATEGORY_LABEL } from "./labels";
 import type {
   ActivityEvent,
@@ -28,6 +29,8 @@ import type {
   InspectionReport,
   InspectionTask,
   ObservationCategory,
+  QueueChange,
+  QueueEntry,
 } from "./types";
 
 const STORAGE_KEY = "farmsignal:state:v1";
@@ -130,6 +133,30 @@ function currentUserName(s: AppState) {
 
 function withActivity(s: AppState, e: Omit<ActivityEvent, "id" | "at">): ActivityEvent[] {
   return [{ ...e, id: newId("act"), at: nowIso() }, ...s.activity];
+}
+
+function queueSnapshot(s: AppState): QueueEntry[] {
+  return activeInspections(s).map((r) => ({
+    inspectionId: r.task.id,
+    fieldId: r.task.fieldId,
+    score: r.priority.score,
+    level: r.priority.level,
+  }));
+}
+
+/** Records how the active queue changed between two states (for the "re-ranked" view). */
+function withQueueChange(
+  prev: AppState,
+  next: AppState,
+  cause: QueueChange["cause"],
+  fieldId: string,
+  inspectionId?: string,
+): AppState {
+  const before = queueSnapshot(prev);
+  const after = queueSnapshot(next);
+  if (JSON.stringify(before) === JSON.stringify(after)) return next;
+  const change: QueueChange = { id: newId("qc"), at: nowIso(), cause, fieldId, inspectionId, before, after };
+  return { ...next, queueChanges: [change, ...(next.queueChanges ?? [])].slice(0, 20) };
 }
 
 function patchTask(s: AppState, id: string, patch: Partial<InspectionTask>): InspectionTask[] {
@@ -240,6 +267,8 @@ export interface CompleteInspectionInput {
   outcome: InspectionOutcome;
   confirmedFindings: string;
   recommendation: string;
+  /** Pass the AI suggestion if the adviser used "Analyze notes" (see agent/report.ts). */
+  aiAssist?: InspectionReport["aiAssist"];
 }
 
 export interface CompleteInspectionResult {
@@ -273,6 +302,7 @@ export function completeInspection(taskId: string, input: CompleteInspectionInpu
       recommendation: input.recommendation.trim(),
       photos: task.photos,
       checksCompleted: task.suggestedChecks.filter((c) => c.done).map((c) => c.label),
+      aiAssist: input.aiAssist,
     };
     const anomalyStatus: Anomaly["status"] =
       input.outcome === "issue_confirmed" ? "confirmed" : input.outcome === "no_issue_found" ? "dismissed" : "under_review";
@@ -334,7 +364,7 @@ export function completeInspection(taskId: string, input: CompleteInspectionInpu
         ...activity,
       ];
     }
-    return {
+    const next: AppState = {
       ...s,
       reports: [report, ...s.reports],
       inspections,
@@ -350,6 +380,7 @@ export function completeInspection(taskId: string, input: CompleteInspectionInpu
       fields: s.fields.map((f) => (f.id === task.fieldId ? { ...f, lastInspectionAt: at, lastObservationAt: at } : f)),
       activity,
     };
+    return withQueueChange(s, next, "inspection_completed", task.fieldId, taskId);
   });
   return result;
 }
@@ -469,7 +500,7 @@ export function submitObservation(input: SubmitObservationInput): SubmitObservat
       ];
     }
 
-    return {
+    const next: AppState = {
       ...s,
       observations: [observation, ...s.observations],
       inspections,
@@ -477,6 +508,13 @@ export function submitObservation(input: SubmitObservationInput): SubmitObservat
       activity,
       fields: s.fields.map((f) => (f.id === input.fieldId ? { ...f, lastObservationAt: at } : f)),
     };
+    return withQueueChange(
+      s,
+      next,
+      result.createdInspection ? "inspection_created" : "observation_added",
+      input.fieldId,
+      result.inspectionId,
+    );
   });
   return result;
 }
