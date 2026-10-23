@@ -26,7 +26,8 @@ Rules:
 
 - B needs new data or a new action → B asks A (or writes a request in the PR/commit message). B may add **pure display helpers** in `src/lib/ui-*.ts` without asking.
 - A changes an exported signature → A updates every caller in the same commit, or keeps the old one working.
-- Both work on the `dev` branch. Commit small, `git pull --rebase` before every push. Never push to `main`; Ivan merges `dev` into `main` at checkpoints.
+- Area A works on `dev`. Area B works on its own branch created from `dev` (for example `ui`). Commit small and push often. When both are done, the branches are merged, tested together and only then pushed to `main`. Nobody pushes to `main` directly.
+- B can pull A's progress any time with `git merge origin/dev` on its own branch.
 - Honesty rules from MVP.md apply everywhere: anything simulated is labeled, the app never claims a diagnosis from greenness data alone, the AI never claims to have looked at a photo.
 
 ## Before anything else (whoever starts first)
