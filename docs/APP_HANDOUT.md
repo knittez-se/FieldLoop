@@ -30,6 +30,20 @@ Rules:
 - B can pull A's progress any time with `git merge origin/dev` on its own branch.
 - Honesty rules from MVP.md apply everywhere: anything simulated is labeled, the app never claims a diagnosis from greenness data alone, the AI never claims to have looked at a photo.
 
+## Status of Area A (for Area B)
+
+Done on `dev` and ready to use from the UI:
+
+| What | How to use it |
+| --- | --- |
+| **AI reads the report** (A2) | `buildReportInput(state, inspectionId, { findingsDraft })` then `await analyzeReport(input)` from `src/lib/agent/report.ts`. Returns `ReportAnalysis`: `suggestedOutcome`, `outcomeReason`, `findingsSummary` (only the adviser's own sentences), `supported` / `ruledOut` hypotheses with evidence, `openQuestions`, `followUp { action, inDays }`, `mode` (`demo` / `llm`), `disclaimer`, optional `warning`. Never throws. Prefill the findings form with it, let the adviser edit, then call `completeInspection(id, { outcome, confirmedFindings, recommendation, aiAssist: { mode, suggestedOutcome, outcomeAccepted } })`. Show the `disclaimer`, and a "Demo mode" label when `mode === "demo"`. |
+| **Queue re-ranking** (A3) | `lastQueueChange(state)` from `src/lib/selectors.ts` → `{ headline, moves[], cause, fieldId, at }` or `null`. Each move has `fieldName`, `fromRank`, `toRank`, `movement` (`new` / `resolved` / `up` / `down` / `same`), `score`. Recorded automatically on `completeInspection` and `submitObservation`. |
+| **Follow-up visits** | `completeInspection` returns `{ reportId, followUpId? }`. With outcome "Needs follow-up" a new open inspection is created, so the field stays in the queue. |
+| **Real data** (A4) | Detection skips fields with too few or outdated readings and lists them under Settings → Field data. Readings on the same date are averaged. |
+| **Tests** (A5) | `npm run test:logic` (detection, parsers, priority, seed, report rules). |
+
+Changes to the state shape bumped the stored version, so old browser data is reset automatically once.
+
 ## Before anything else (whoever starts first)
 
 1. `npm install && npm run dev`, open http://localhost:3000 and click through the demo flow in the README.

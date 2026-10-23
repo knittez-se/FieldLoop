@@ -62,6 +62,7 @@ The app reads three files from `data/` (contract in [MVP.md](MVP.md)):
 | Satellite data (Sentinel-2) | Read from `data/field_scores.csv` (data script). Rows with `source = simulated` and the built-in fallback are labeled "Simulated" in the app. TODO: update once the script produces real numbers. |
 | Weather data | Rainfall from `data/weather.csv` (built-in sample if missing). Optional live Open-Meteo lookup in Settings. |
 | Change detection and ranking | **Real logic, rule-based** (`src/lib/detection.ts`, `src/lib/priority.ts`). Not a validated risk model. |
+| Reading the adviser's report | **AI suggestion** (`/api/process-report`): suggests the outcome, summarizes the adviser's own notes and lists supported or ruled-out causes. LLM with an API key, transparent keyword rules without. The adviser always confirms. |
 | Explanations by the AI agent | **Demo mode** (deterministic, built only from the field records) without an API key; **LLM** (Claude via the Anthropic API) when `ANTHROPIC_API_KEY` is set. |
 | Voice or photo field report | **Real.** Voice uses the browser's speech recognition (Chrome/Edge/Safari); photos are downscaled and stored locally. Photos are not analyzed by AI. |
 | Cooperative, advisors and field boundaries | Simulated for the demo |
@@ -102,6 +103,8 @@ cp .env.example .env.local
 Never commit `.env.local` or real keys.
 
 Production build check: `npm run build && npm start`.
+
+Logic tests (change detection, data parsers, priority score, report analysis): `npm run test:logic`.
 
 ## Project structure
 
