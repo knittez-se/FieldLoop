@@ -61,6 +61,7 @@ export default function InspectionPage() {
   const [recommendation, setRecommendation] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [justCompleted, setJustCompleted] = useState(false);
+  const [followUpId, setFollowUpId] = useState<string | null>(null);
 
   if (!state) return <PageLoading />;
   const task = state.inspections.find((t) => t.id === id);
@@ -85,7 +86,8 @@ export default function InspectionPage() {
     if (findings.trim().length < 10) return setFormError("Describe what you actually observed on site (at least a short sentence).");
     setFormError(null);
     if (note.trim()) submitNote();
-    completeInspection(task!.id, { outcome, confirmedFindings: findings, recommendation });
+    const result = completeInspection(task!.id, { outcome, confirmedFindings: findings, recommendation });
+    setFollowUpId(result.followUpId ?? null);
     setJustCompleted(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -129,13 +131,28 @@ export default function InspectionPage() {
             <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
             <span>
               Inspection completed and report <strong>{report.id}</strong> saved. The dashboard, queue and field history are updated.
+              {followUpId && (
+                <>
+                  {" "}
+                  The case stays open as follow-up{" "}
+                  <Link href={`/inspections/${followUpId}`} className="font-semibold underline">
+                    {followUpId}
+                  </Link>
+                  .
+                </>
+              )}
             </span>
           </div>
           <div className="flex gap-2">
+            {followUpId && (
+              <Button size="sm" href={`/inspections/${followUpId}`}>
+                Open follow-up
+              </Button>
+            )}
             <Button size="sm" variant="secondary" href={`/fields/${task.fieldId}`}>
               View field
             </Button>
-            <Button size="sm" href="/">
+            <Button size="sm" href="/" variant={followUpId ? "secondary" : "primary"}>
               Back to overview
             </Button>
           </div>
@@ -277,7 +294,7 @@ export default function InspectionPage() {
                         <button
                           type="button"
                           onClick={() => removeInspectionPhoto(task.id, i)}
-                          className="absolute right-1 top-1 rounded bg-black/60 p-1 text-white opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          className="absolute right-1 top-1 rounded bg-black/60 p-1 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
                           aria-label="Remove photo"
                         >
                           <Trash className="h-3.5 w-3.5" />

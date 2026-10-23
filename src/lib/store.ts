@@ -242,15 +242,26 @@ export interface CompleteInspectionInput {
   recommendation: string;
 }
 
-/** Completes a task, writes an InspectionReport and updates anomalies + field. Returns the report id. */
-export function completeInspection(taskId: string, input: CompleteInspectionInput): string | undefined {
-  let reportId: string | undefined;
+export interface CompleteInspectionResult {
+  reportId?: string;
+  /** Set when the outcome is "needs_follow_up": the case stays on the queue. */
+  followUpId?: string;
+}
+
+/**
+ * Completes a task, writes an InspectionReport and updates anomalies + field.
+ * "Needs follow-up" does not close the case: a new open inspection is created
+ * from the adviser's findings so the field stays in the queue.
+ */
+export function completeInspection(taskId: string, input: CompleteInspectionInput): CompleteInspectionResult {
+  const result: CompleteInspectionResult = {};
   update((s) => {
     const task = s.inspections.find((t) => t.id === taskId);
     if (!task || task.status === "completed") return s;
     const user = currentUserName(s);
     const at = nowIso();
-    reportId = nextId("RPT", s.reports.map((r) => r.id));
+    result.reportId = nextId("RPT", s.reports.map((r) => r.id));
+    const reportId = result.reportId;
     const report: InspectionReport = {
       id: reportId,
       inspectionId: taskId,
@@ -271,16 +282,62 @@ export function completeInspection(taskId: string, input: CompleteInspectionInpu
         : input.outcome === "no_issue_found"
           ? "no issue found"
           : "follow-up needed";
+    let inspections = patchTask(s, taskId, {
+      status: "completed",
+      completedAt: at,
+      startedAt: task.startedAt ?? at,
+      assigneeId: task.assigneeId ?? s.settings.currentUserId,
+      reportId,
+    });
+    let activity = withActivity(s, {
+      fieldId: task.fieldId,
+      type: "inspection_completed",
+      message: `Inspection completed — ${outcomeText}`,
+      actor: user,
+      inspectionId: taskId,
+    });
+    if (input.outcome === "needs_follow_up") {
+      const followUpId = nextId("INS", inspections.map((t) => t.id));
+      result.followUpId = followUpId;
+      const recommendation = input.recommendation.trim();
+      const followUp: InspectionTask = {
+        id: followUpId,
+        fieldId: task.fieldId,
+        anomalyIds: task.anomalyIds,
+        observationIds: [],
+        title: `Follow-up: ${task.title}`,
+        reason: recommendation
+          ? `Follow-up after ${task.id}. Adviser recommendation: ${truncate(recommendation, 180)}`
+          : `Follow-up after ${task.id}. The visit did not close the case.`,
+        supportingObservations: [
+          `Previous inspection ${task.id} (${user}): ${truncate(input.confirmedFindings.trim(), 160)}`,
+        ],
+        suggestedChecks: task.suggestedChecks.map((c, i) => ({ id: `chk-${i + 1}`, label: c.label, done: false })),
+        assigneeId: task.assigneeId ?? s.settings.currentUserId,
+        status: "open",
+        createdAt: at,
+        updatedAt: at,
+        notes: [],
+        photos: [],
+      };
+      inspections = [followUp, ...inspections];
+      activity = [
+        {
+          id: newId("act"),
+          at,
+          fieldId: task.fieldId,
+          type: "inspection_created",
+          message: `Follow-up inspection ${followUpId} opened`,
+          actor: user,
+          inspectionId: followUpId,
+        },
+        ...activity,
+      ];
+    }
     return {
       ...s,
       reports: [report, ...s.reports],
-      inspections: patchTask(s, taskId, {
-        status: "completed",
-        completedAt: at,
-        startedAt: task.startedAt ?? at,
-        assigneeId: task.assigneeId ?? s.settings.currentUserId,
-        reportId,
-      }),
+      inspections,
       anomalies: s.anomalies.map((a) =>
         task.anomalyIds.includes(a.id)
           ? {
@@ -291,16 +348,10 @@ export function completeInspection(taskId: string, input: CompleteInspectionInpu
           : a,
       ),
       fields: s.fields.map((f) => (f.id === task.fieldId ? { ...f, lastInspectionAt: at, lastObservationAt: at } : f)),
-      activity: withActivity(s, {
-        fieldId: task.fieldId,
-        type: "inspection_completed",
-        message: `Inspection completed — ${outcomeText}`,
-        actor: user,
-        inspectionId: taskId,
-      }),
+      activity,
     };
   });
-  return reportId;
+  return result;
 }
 
 export interface SubmitObservationInput {

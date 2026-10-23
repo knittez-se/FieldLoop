@@ -145,7 +145,7 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
     name,
     ownerName: farmerNames[i % farmerNames.length],
     cooperative: "Nzoia Valley Maize Cooperative",
-    region: fromFiles ? "Demo area" : "Trans-Nzoia, Kenya",
+    region: "Trans-Nzoia, Kenya",
     location: center,
   }));
   const farmIdFor = (f: FieldInput) => farms[farmNames.indexOf(f.farm ?? "Demo Farm")].id;
@@ -426,7 +426,7 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
     seededAt: now.toISOString(),
     cooperative: {
       name: "Nzoia Valley Maize Cooperative",
-      region: fromFiles ? "Demo area (data/fields.geojson)" : "Trans-Nzoia, Kenya",
+      region: fromFiles ? "Trans-Nzoia, Kenya · simulated outlines" : "Trans-Nzoia, Kenya",
       fictional: true,
       center,
     },
