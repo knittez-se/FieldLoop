@@ -175,7 +175,7 @@ export function FieldMap(props: FieldMapProps) {
         <div className="absolute inset-0 flex items-center justify-center bg-stone-100 text-xs text-stone-500">Loading map…</div>
       )}
       {tilesFailed && (
-        <div className="absolute bottom-2 left-2 z-[500] rounded-md bg-white/90 px-2 py-1 text-[11px] text-stone-700 shadow">
+        <div className="absolute bottom-7 left-2 z-[500] rounded-md bg-white/90 px-2 py-1 text-[11px] text-stone-700 shadow">
           Map tiles unavailable – showing field geometry only
         </div>
       )}

@@ -13,7 +13,7 @@ import {
   MessageSquare,
   Play,
   Send,
-  Trash2,
+  Trash,
 } from "lucide-react";
 import {
   addInspectionNote,
@@ -280,7 +280,7 @@ export default function InspectionPage() {
                           className="absolute right-1 top-1 rounded bg-black/60 p-1 text-white opacity-0 group-hover:opacity-100 focus:opacity-100"
                           aria-label="Remove photo"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash className="h-3.5 w-3.5" />
                         </button>
                       )}
                     </div>
