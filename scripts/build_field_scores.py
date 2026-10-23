@@ -8,6 +8,7 @@ For every field in data/fields.geojson and every image from the last 10 weeks:
      image for that field, so a cloud never looks like a dying field.
   2. If it is clear, ask for the field's average NDVI: (NIR - red) / (NIR + red).
   3. Keep one reading per field per week: the clearest one (latest if tied).
+  4. Plant one demo problem: lower F1's last 3 readings and label only those "simulated".
 
 All pixel maths happens on Planetary Computer's server; we only receive numbers.
 
@@ -31,6 +32,12 @@ WEEKS = 10
 MAX_SCENE_CLOUD = 60  # skip images that are mostly cloud over the whole 100 km tile
 MIN_CLEAR_SHARE = 0.9  # a field needs at least 90% clear pixels in an image to count
 CLEAR_CLASSES = {4, 5}  # SCL codes for vegetation and bare soil: what a clear field looks like
+
+# The real fields all dry out together before harvest, so none stands out for the demo.
+# We plant ONE problem on purpose: F1 (the steadiest real field) gets lowered in its last
+# 3 weekly readings. Only those 3 rows are changed, and they are labeled "simulated".
+PLANTED_FIELD = "F1"
+PLANTED_DROPS = [0.08, 0.16, 0.24]  # how much to lower each of the last 3 readings
 
 
 def with_retries(call, *args, **kwargs):
@@ -92,6 +99,12 @@ def main():
     rows = [{"field_id": field_id, "date": day.isoformat(), "greenness": round(min(max(ndvi, 0), 1), 3), "source": "real"}
             for (field_id, _), (_, day, ndvi) in sorted(best.items(), key=lambda kv: (kv[0][0], kv[1][1]))]
 
+    # Plant the demo problem (see PLANTED_FIELD above). Rows are sorted by date, so [-3:] is the last 3 weeks.
+    planted = [r for r in rows if r["field_id"] == PLANTED_FIELD][-3:]
+    for row, drop in zip(planted, PLANTED_DROPS):
+        row["greenness"] = round(row["greenness"] - drop, 3)
+        row["source"] = "simulated"
+
     with open(DATA_DIR / "field_scores.csv", "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["field_id", "date", "greenness", "source"])
         writer.writeheader()
@@ -101,6 +114,7 @@ def main():
     weeks_with_data = {fid: sum(1 for r in rows if r["field_id"] == fid) for fid in field_ids}
     print(f"\nWrote {len(rows)} rows to data/field_scores.csv from {len(images)} images.")
     print(f"Skipped {skipped} field readings because of clouds or shadows.")
+    print(f"Planted problem: {PLANTED_FIELD}'s last 3 readings lowered and labeled simulated.")
     print("Weeks with a reading per field: " + ", ".join(f"{k}={v}" for k, v in weeks_with_data.items()))
 
 
