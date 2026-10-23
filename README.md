@@ -4,6 +4,8 @@
 
 Built for the Polaris Global Hackathon (October 2026).
 
+Working on this? Start with [MVP.md](MVP.md) for the scope, the data file we share, and who builds what.
+
 FarmSignal is an AI field operations assistant for small farming cooperatives. It uses free satellite imagery and weather data to find fields that have changed, ranks them by urgency, and turns each alert into a concrete visit for a field advisor. The advisor reports back by voice note or photo, and FarmSignal tracks the case until it is resolved.
 
 ## The problem
