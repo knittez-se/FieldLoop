@@ -43,6 +43,10 @@ export interface Detection {
   readingsUsed: number;
   lastDate: string;
   allReal: boolean;
+  /** true if at least one reading is real Sentinel-2 data */
+  anyReal: boolean;
+  /** how many of the last 3 readings are simulated (e.g. a planted demo drop) */
+  simulatedInLast3: number;
   rain14dMm?: number;
   /** Extra caveats about the data quality of this signal. */
   caveats: string[];
@@ -171,6 +175,8 @@ export function detectChanges(fields: FieldInput[], weather: RainfallRow[]): Det
       readingsUsed: f.readings.length,
       lastDate,
       allReal: f.readings.every((r) => r.source === "real"),
+      anyReal: f.readings.some((r) => r.source === "real"),
+      simulatedInLast3: f.readings.slice(-3).filter((r) => r.source !== "real").length,
       rain14dMm: rainLastDays(weather, 14, lastDate),
       caveats,
     });

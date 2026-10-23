@@ -107,7 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="font-medium text-white">{state.cooperative.name}</div>
             <div className="text-brand-300">{state.cooperative.region}</div>
             <div className="mt-2 inline-block rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
-              Fictional demo data
+              Fictional cooperative
             </div>
           </div>
         )}

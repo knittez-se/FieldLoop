@@ -75,7 +75,13 @@ function squareAround(c: LatLng, sideM = 120): LatLng[] {
 const fmtPct = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n)}%`;
 
 function anomalyFromDetection(d: Detection, id: string, field: Field, now: Date): Anomaly {
-  const dataNote = d.allReal ? "Sentinel-2 NDVI" : "simulated greenness data";
+  const dataNote = d.allReal
+    ? "Sentinel-2 NDVI"
+    : d.anyReal && d.simulatedInLast3 > 0
+      ? `Sentinel-2 NDVI, but the last ${d.simulatedInLast3} reading(s) are simulated (planted for the demo)`
+      : d.anyReal
+        ? "a mix of Sentinel-2 and simulated readings"
+        : "simulated greenness data";
   const dry = d.rain14dMm !== undefined && d.rain14dMm < 15;
   const explanations = [
     ...(dry ? [`Water stress during the recent dry period (${d.rain14dMm} mm rain in the 14 days before the last reading).`] : []),
@@ -83,7 +89,9 @@ function anomalyFromDetection(d: Detection, id: string, field: Field, now: Date)
     "Pest or disease pressure — cannot be determined from greenness alone.",
     d.allReal
       ? "Measurement artefact (thin cloud, haze or mixed pixels at the field edge) — the signal must be checked on the ground."
-      : "Simulated demo data — the pattern illustrates the workflow only.",
+      : d.anyReal && d.simulatedInLast3 > 0
+        ? "Planted demo signal — the decline comes from simulated readings added for the demo; the earlier readings are real Sentinel-2 data."
+        : "Simulated demo data — the pattern illustrates the workflow only.",
   ];
   return {
     id,
@@ -157,7 +165,7 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
       f.boundary.length >= 3
         ? f.boundary
         : squareAround([center[0] - 0.004 * Math.floor(i / 4), center[1] + 0.003 * (i % 4) - 0.006]);
-    const series = f.readings.map((r) => ({ date: r.date, value: r.greenness }));
+    const series = f.readings.map((r) => ({ date: r.date, value: r.greenness, source: r.source }));
     const allReal = f.readings.every((r) => r.source === "real");
     const someReal = f.readings.some((r) => r.source === "real");
     return {
@@ -428,7 +436,7 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
     seededAt: now.toISOString(),
     cooperative: {
       name: "Nzoia Valley Maize Cooperative",
-      region: fromFiles ? "Trans-Nzoia, Kenya · simulated outlines" : "Trans-Nzoia, Kenya",
+      region: "Trans-Nzoia, Kenya",
       fictional: true,
       center,
     },

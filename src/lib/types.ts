@@ -39,6 +39,8 @@ export interface Farm {
 export interface VegetationSample {
   date: string; // ISO date
   value: number; // 0..1, NDVI-like scale
+  /** Per-reading origin from field_scores.csv. Missing = treat as simulated. */
+  source?: "real" | "simulated";
 }
 
 export interface Field {

@@ -5,35 +5,32 @@
       "type": "Feature",
       "properties": {
         "field_id": "F1",
-        "name": "Saboti North",
-        "farm": "Saboti Farm",
-        "growth_stage": "V8 (8-leaf)",
-        "crop": "maize",
-        "source": "simulated"
+        "name": "Kapsara East Block",
+        "farm": "Kapsara Farm"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              34.99,
-              1.015
+              34.976161,
+              1.073351
             ],
             [
-              34.991797,
-              1.015
+              34.979259,
+              1.073351
             ],
             [
-              34.991797,
-              1.016347
+              34.979185,
+              1.071581
             ],
             [
-              34.99,
-              1.016347
+              34.976161,
+              1.071654
             ],
             [
-              34.99,
-              1.015
+              34.976161,
+              1.073351
             ]
           ]
         ]
@@ -43,35 +40,32 @@
       "type": "Feature",
       "properties": {
         "field_id": "F2",
-        "name": "Saboti South",
-        "farm": "Saboti Farm",
-        "growth_stage": "V10 (10-leaf)",
-        "crop": "maize",
-        "source": "simulated"
+        "name": "Kapsara West Block",
+        "farm": "Kapsara Farm"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              34.991977,
-              1.015
+              34.978521,
+              1.067819
             ],
             [
-              34.993773,
-              1.015
+              34.979849,
+              1.067746
             ],
             [
-              34.993773,
-              1.016347
+              34.979849,
+              1.067082
             ],
             [
-              34.991977,
-              1.016347
+              34.978521,
+              1.067082
             ],
             [
-              34.991977,
-              1.015
+              34.978521,
+              1.067819
             ]
           ]
         ]
@@ -81,35 +75,32 @@
       "type": "Feature",
       "properties": {
         "field_id": "F3",
-        "name": "Kapsara East Block",
-        "farm": "Kapsara Farm",
-        "growth_stage": "V12 (12-leaf)",
-        "crop": "maize",
-        "source": "simulated"
+        "name": "Kapsara River Strip",
+        "farm": "Kapsara Farm"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              34.993953,
-              1.015
+              34.977268,
+              1.071477
             ],
             [
-              34.99575,
-              1.015
+              34.978153,
+              1.071477
             ],
             [
-              34.99575,
-              1.016347
+              34.978153,
+              1.070651
             ],
             [
-              34.993953,
-              1.016347
+              34.977268,
+              1.070651
             ],
             [
-              34.993953,
-              1.015
+              34.977268,
+              1.071477
             ]
           ]
         ]
@@ -119,35 +110,32 @@
       "type": "Feature",
       "properties": {
         "field_id": "F4",
-        "name": "Kapsara West Block",
-        "farm": "Kapsara Farm",
-        "growth_stage": "VT (tasseling)",
-        "crop": "maize",
-        "source": "simulated"
+        "name": "Saboti Upper Field",
+        "farm": "Saboti Ridge Farm"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              34.99593,
-              1.015
+              34.974907,
+              1.068336
             ],
             [
-              34.997727,
-              1.015
+              34.976014,
+              1.068336
             ],
             [
-              34.997727,
-              1.016347
+              34.976014,
+              1.067082
             ],
             [
-              34.99593,
-              1.016347
+              34.974907,
+              1.067082
             ],
             [
-              34.99593,
-              1.015
+              34.974907,
+              1.068336
             ]
           ]
         ]
@@ -157,35 +145,32 @@
       "type": "Feature",
       "properties": {
         "field_id": "F5",
-        "name": "Endebess Ridge",
-        "farm": "Endebess Farm",
-        "growth_stage": "V6 (6-leaf)",
-        "crop": "maize",
-        "source": "simulated"
+        "name": "Saboti Lower Field",
+        "farm": "Saboti Ridge Farm"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              34.99,
-              1.016527
+              34.972989,
+              1.068262
             ],
             [
-              34.991797,
-              1.016527
+              34.973771,
+              1.068262
             ],
             [
-              34.991797,
-              1.017875
+              34.973771,
+              1.067082
             ],
             [
-              34.99,
-              1.017875
+              34.972989,
+              1.067082
             ],
             [
-              34.99,
-              1.016527
+              34.972989,
+              1.068262
             ]
           ]
         ]
@@ -195,35 +180,32 @@
       "type": "Feature",
       "properties": {
         "field_id": "F6",
-        "name": "Kwanza Lower",
-        "farm": "Endebess Farm",
-        "growth_stage": "V10 (10-leaf)",
-        "crop": "maize",
-        "source": "simulated"
+        "name": "Saboti Hillside",
+        "farm": "Saboti Ridge Farm"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              34.991977,
-              1.016527
+              34.968461,
+              1.066861
             ],
             [
-              34.993773,
-              1.016527
+              34.969596,
+              1.066861
             ],
             [
-              34.993773,
-              1.017875
+              34.969596,
+              1.065135
             ],
             [
-              34.991977,
-              1.017875
+              34.968461,
+              1.065135
             ],
             [
-              34.991977,
-              1.016527
+              34.968461,
+              1.066861
             ]
           ]
         ]
@@ -233,35 +215,32 @@
       "type": "Feature",
       "properties": {
         "field_id": "F7",
-        "name": "Maili Saba",
-        "farm": "Cherangani Farm",
-        "growth_stage": "R1 (silking)",
-        "crop": "maize",
-        "source": "simulated"
+        "name": "Kiminini North",
+        "farm": "Kiminini Plots"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              34.993953,
-              1.016527
+              34.978876,
+              1.068881
             ],
             [
-              34.99575,
-              1.016527
+              34.979879,
+              1.06869
             ],
             [
-              34.99575,
-              1.017875
+              34.97982,
+              1.067923
             ],
             [
-              34.993953,
-              1.017875
+              34.978817,
+              1.0681
             ],
             [
-              34.993953,
-              1.016527
+              34.978876,
+              1.068881
             ]
           ]
         ]
@@ -271,35 +250,32 @@
       "type": "Feature",
       "properties": {
         "field_id": "F8",
-        "name": "Cherangani Edge",
-        "farm": "Cherangani Farm",
-        "growth_stage": "V8 (8-leaf)",
-        "crop": "maize",
-        "source": "simulated"
+        "name": "Kiminini South",
+        "farm": "Kiminini Plots"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              34.99593,
-              1.016527
+              34.971219,
+              1.066787
             ],
             [
-              34.997727,
-              1.016527
+              34.972768,
+              1.066639
             ],
             [
-              34.997727,
-              1.017875
+              34.972694,
+              1.065681
             ],
             [
-              34.99593,
-              1.017875
+              34.971145,
+              1.065828
             ],
             [
-              34.99593,
-              1.016527
+              34.971219,
+              1.066787
             ]
           ]
         ]

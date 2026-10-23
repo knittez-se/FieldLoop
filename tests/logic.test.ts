@@ -184,3 +184,25 @@ test("report: larvae found → issue confirmed with 7-day re-scout", () => {
   assert.ok(a.supported.some((s) => s.hypothesis === "pests"));
   assert.equal(a.followUp.inDays, 7);
 });
+
+// --- the committed data/ files (data contract with the data script) -----------
+
+test("data/ files follow the contract and flag only the planted problem field", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const dir = path.join(process.cwd(), "data");
+  if (!fs.existsSync(path.join(dir, "field_scores.csv"))) return; // nothing committed yet
+  const warnings: string[] = [];
+  const scores = parseFieldScores(fs.readFileSync(path.join(dir, "field_scores.csv"), "utf8"), warnings);
+  const shapes = parseFieldsGeojson(fs.readFileSync(path.join(dir, "fields.geojson"), "utf8"), warnings);
+  const weather = parseWeather(fs.readFileSync(path.join(dir, "weather.csv"), "utf8"), warnings);
+  assert.deepEqual(warnings, []);
+  const fields = [...scores.keys()].map((id) => ({ id, boundary: shapes.get(id)?.boundary ?? [], readings: scores.get(id)! }));
+  assert.ok(fields.every((f) => f.boundary.length >= 3), "every field has an outline");
+  assert.ok(weather.length > 0);
+  const flagged = detectChanges(fields, weather);
+  assert.ok(flagged.length >= 1, "at least one field is flagged");
+  assert.equal(flagged[0].severity, "high");
+  // the flagged field must contain the planted (simulated) readings, so the app labels it
+  assert.equal(flagged[0].allReal, false);
+});

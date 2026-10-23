@@ -6,7 +6,7 @@ Built for the Polaris Global Hackathon (October 2026).
 
 Working on this? Start with [MVP.md](MVP.md) for the scope, the data file we share, and who builds what.
 
-FarmSignal is an AI field operations assistant for small farming cooperatives. It uses satellite and weather signals to find fields that have changed, ranks them by urgency, and turns each alert into a concrete visit for a field advisor. The advisor reports back by voice note or photo, and FarmSignal tracks the case until it is resolved.
+FarmSignal is an AI field operations assistant for small farming cooperatives. It uses free satellite imagery and weather data to find fields that have changed, ranks them by urgency, and turns each alert into a concrete visit for a field advisor. The advisor reports back by voice note or photo, and FarmSignal tracks the case until it is resolved.
 
 ## The problem
 
@@ -16,7 +16,7 @@ A cooperative may look after hundreds of small plots with only a few advisors. T
 
 ## What FarmSignal does
 
-1. **Spots changes.** Compares each field's crop health signal against its own history and combines it with recent weather.
+1. **Spots changes.** Compares each field's satellite crop health (NDVI) against its own history and its neighbors, and combines it with recent weather.
 2. **Ranks the fields.** A transparent rule-based score produces a prioritized inspection queue: which field to visit first, why it was flagged, and how uncertain the signal is.
 3. **Plans the visit.** For each flagged field it suggests what the advisor should check on site, for example signs of water stress versus pests.
 4. **Closes the loop.** The advisor records notes (typed or dictated), photos and confirmed findings. FarmSignal updates the field's status, re-ranks the queue and keeps a record of what was checked and what happened.
@@ -26,27 +26,23 @@ FarmSignal never claims a diagnosis from a satellite image alone. A low vegetati
 
 ## Demo flow (3 minutes)
 
-The app ships with a fictional cooperative (Nzoia Valley Maize Cooperative, Trans-Nzoia, Kenya) and 8 maize fields. `data/` holds the shared simulated files (regenerate with `python3 scripts/make_sample_data.py`). If those files are missing, the app falls back to the built-in sample and the top field id changes.
+The demo uses **8 real farm plots west of Kitale, Kenya** with **real Sentinel-2 greenness and real rainfall** (see below). One problem is planted: the last 3 readings of field **F1 (Kapsara East Block)** are lowered and labeled `simulated`, because real fields all dip together before harvest and nothing would stand out otherwise. The cooperative, farmers, advisers and the workflow history are fictional.
 
-1. **Overview** — the dashboard says *Inspect first: Kapsara East Block (F3)*, score 95. Its simulated greenness fell about 46% against its own recent weeks while the other fields stayed steady, and the farmer reported leaf rolling. One other field (Kwanza Lower, F6) is a milder, medium-priority signal. Press **Start visit**.
-2. **Field Map** — F3 is labeled and drawn in red. The map shows field outlines only, not a satellite image. Click it → *Start visit* or *Field details*.
-3. **Field page** — six-part anomaly assessment (observed / why it matters / hypotheses / confidence / verify on site / next action), simulated index trend, weather context, and a **case history** timeline. Ask the Field Agent *"Why does this field need attention?"*.
-4. **Visit** (`/inspections/INS-1312/visit`, phone layout) — *Start visit* → tick checks → add a note (or dictate) → add a photo → *Suggest an outcome* (demo rules, or the model when a key is set) → edit it → *Complete visit*. The suggestion only restates the note. It does not look at the photo. Choosing *Needs follow-up* keeps the field on the queue as a new visit.
-5. **Back to Overview** — a **Queue updated** banner names the field that left and the field that is now first. High-priority alerts drop from 1 to 0. The case history on the field page shows the completed visit.
+1. **Overview** — *Inspect first: Kapsara East Block (F1)*. Its greenness fell sharply over the last 3 readings while the other 7 fields did not, and a farmer reported leaf rolling. Press **Start visit**.
+2. **Field Map** — F1 is labeled and drawn in red. The map shows the traced field outlines, not a satellite image.
+3. **Field page** — why it was flagged, what to check, the greenness trend (real readings and the 3 simulated ones are labeled), rainfall, and a **case history** timeline. Ask the Field Agent *"Why does this field need attention?"*.
+4. **Visit** (phone layout) — *Start visit* → tick checks → add a note (or dictate) → add a photo → *Suggest an outcome* → edit it → *Complete visit*. The suggestion only restates the note and does not look at the photo. *Needs follow-up* keeps the field on the queue as a new visit.
+5. **Back to Overview** — a **Queue updated** banner names the field that left and the field that is now first. The case history on the field page shows the completed visit.
 6. **Field Agent** → *Summarize latest findings* separates what was confirmed on site from what is still a hypothesis.
-7. Optional: **Report observation** from the sidebar for another field → a new inspection task is created automatically.
+7. Optional: **Report observation** for another field → a new inspection task is created automatically.
 
-*Reset demo* is in the sidebar and under Overview, and on Settings. Use it before each run.
-
-Screens from this branch:
+*Reset demo* (sidebar, Overview, Settings) restores the scenario before each run.
 
 ![Overview](docs/screenshots/overview-desktop.png)
 
 ![Phone visit](docs/screenshots/visit-phone.png)
 
 ![Case history](docs/screenshots/field-desktop.png)
-
-*Settings → Reset demo data* restores the scenario before each run.
 
 ## Field data (shared with the data script)
 
@@ -59,7 +55,7 @@ The app reads three files from `data/` (contract in [MVP.md](MVP.md)):
 | `data/weather.csv` | `date,rainfall_mm` |
 
 - `GET /api/field-data` reads the files on every page load. If they changed, the demo state is rebuilt from them (a blue notice says so). *Settings → Reload data files* re-checks manually. A reload replaces in-browser edits with a fresh scenario.
-- The files in `data/` are simulated (`source = simulated`), generated by `scripts/make_sample_data.py`. F3 is the planted large drop; F6 is a milder drop.
+- The files in `data/` come from the data scripts in `scripts/` (real Sentinel-2 NDVI and Open-Meteo rainfall; see "Data scripts" below). `scripts/make_sample_data.py` can overwrite them with fully simulated data.
 - Without `data/field_scores.csv` the app uses a built-in simulated sample (`src/lib/builtin-field-data.ts`).
 - Any field IDs work (`F1`…`F8` or others). Fields without an outline are drawn as placeholder squares; problems are listed under *Settings → Field data*.
 - **Change detection** (`src/lib/detection.ts`) compares each field's last reading with its own earlier weeks and with the median change of the other fields. Fields that fall clearly behind become anomalies with an open inspection task. Readings with `source = real` are labeled Sentinel-2, everything else "Simulated".
@@ -67,35 +63,50 @@ The app reads three files from `data/` (contract in [MVP.md](MVP.md)):
 
 ## What is real and what is simulated
 
+We want to be upfront about this.
+
 | Part | Status |
 | --- | --- |
-| Satellite data (Sentinel-2) | Read from `data/field_scores.csv` (data script). Rows with `source = simulated` and the built-in fallback are labeled "Simulated" in the app. TODO: update once the script produces real numbers. |
-| Weather data | Rainfall from `data/weather.csv` (built-in sample if missing). Optional live Open-Meteo lookup in Settings. |
+| Satellite data (Sentinel-2) | **Real.** Weekly greenness (NDVI) per field for the last 10 weeks, from Sentinel-2 L2A images, with cloudy readings skipped. The app labels every field whose readings are not all real as "Simulated". |
+| Problem signal | **One planted problem:** field F1's last 3 readings are lowered and labeled `simulated` in the data. The other 77 readings are real. Real fields all dip together before harvest, so without this no single field stands out. |
+| Weather data | **Real.** Daily rainfall from Open-Meteo for the same 10 weeks (`data/weather.csv`). |
+| Field boundaries | **Real** farm plots west of Kitale, Kenya, traced by hand over satellite photos and checked against ESA WorldCover (81 to 100% cropland). We do not know what crop is planted in each one; the app assumes maize for the demo. Field names are fictional. |
 | Change detection and ranking | **Real logic, rule-based** (`src/lib/detection.ts`, `src/lib/priority.ts`). Not a validated risk model. |
 | Reading the adviser's report | **AI suggestion** (`/api/process-report`): suggests the outcome, summarizes the adviser's own notes and lists supported or ruled-out causes. LLM with an API key, transparent keyword rules without. The adviser always confirms. |
-| Explanations by the AI agent | **Demo mode** (deterministic, built only from the field records) without an API key; **LLM** (Claude via the Anthropic API) when `ANTHROPIC_API_KEY` is set. |
+| Explanations by the AI agent | **LLM** (Claude via the Anthropic API) when `ANTHROPIC_API_KEY` is set; otherwise a clearly labeled demo mode built only from the field records. |
 | Voice or photo field report | **Real.** Voice uses the browser's speech recognition (Chrome/Edge/Safari); photos are downscaled and stored locally. Photos are not analyzed by AI. |
-| Cooperative, advisors and field boundaries | Simulated for the demo |
-| Problem signals in the demo fields | Simulated for the demo, clearly labeled in the app |
+| Cooperative, farmers, advisers, workflow history | Fictional, for the demo. |
 
 ## Tech stack
+
+Data side (`scripts/`, writes the files in `data/`):
+
+- Python, with `pystac-client` to search the satellite catalog
+- Sentinel-2 L2A imagery (free, from the European Space Agency's Copernicus program), accessed through Microsoft Planetary Computer. Their server computes each field's average NDVI and cloud mask, so we only download numbers, never whole images
+- Open-Meteo for daily rainfall (free, no key)
+- ESA WorldCover 2021 to check that the field outlines are cropland
+
+App side:
 
 - Next.js (App Router) + TypeScript + React
 - Tailwind CSS v4, Lucide icons
 - Leaflet + OpenStreetMap tiles for the field map (SVG fallback if tiles or Leaflet are unavailable)
-- Next.js route handlers for the Field Agent (`/api/agent`) and weather (`/api/weather`)
-- Open-Meteo weather API (free, no key)
-- Optional: Anthropic API for the Field Agent (server-side only)
+- Next.js route handlers: `/api/field-data` (reads `data/`), `/api/agent` (Field Agent), `/api/process-report` (report analysis), `/api/weather` (optional live Open-Meteo)
+- Optional: Anthropic API (server-side only)
 - Persistence: browser `localStorage` (prototype)
 
 ## Run it locally
 
-Requires Node.js 20+.
-
 ```bash
 git clone https://github.com/knittez-se/Polaris-Hackathon---FarmSignal.git
 cd Polaris-Hackathon---FarmSignal
-git checkout dev
+```
+
+### App
+
+Requires Node.js 20+.
+
+```bash
 npm install
 npm run dev
 ```
@@ -115,6 +126,20 @@ Never commit `.env.local` or real keys.
 Production build check: `npm run build && npm start`.
 
 Logic tests (change detection, data parsers, priority score, report analysis): `npm run test:logic`.
+
+### Data scripts
+
+The data files in `data/` are already committed, so you only need this to refresh them. No API keys needed.
+
+```bash
+pip install -r requirements.txt
+python scripts/test_access.py         # check that satellite access works (lists images, one field's NDVI)
+python scripts/build_field_scores.py  # data/field_scores.csv: weekly NDVI per field, about 20 seconds
+python scripts/fetch_weather.py       # data/weather.csv: daily rainfall
+python scripts/make_sample_data.py    # optional: overwrite both files with fully simulated data
+```
+
+The field outlines in `data/fields.geojson` were traced by hand and are not made by a script. The app reloads the files on the next page load.
 
 ## Project structure
 
@@ -142,7 +167,9 @@ src/
     priority.ts           Documented rule-based priority score
     selectors.ts          Derived views / dashboard stats
     agent/                Agent context builder, demo agent, LLM client
-    services/             External integrations (weather, satellite placeholder)
+    services/             Live weather lookup (Open-Meteo)
+scripts/                  Data scripts (Python): satellite NDVI, rainfall, sample data
+data/                     The shared files the app reads
 ```
 
 To move to a real backend, keep the action signatures in `store.ts` and replace `load`/`persist` with API calls.
@@ -164,7 +191,7 @@ Satellite crop monitoring and farm advice already exist: EOSDA Crop Monitoring (
 
 Ideas beyond the hackathon, not built yet:
 
-- Real Sentinel-2 vegetation indices per field (Copernicus Data Space)
+- Automatic weekly data refresh instead of running the scripts by hand
 - Shared database and accounts for teams
 - Offline use for advisors with weak internet
 - Support for more crops and regions
@@ -179,4 +206,4 @@ Ideas beyond the hackathon, not built yet:
 
 ## Acknowledgements
 
-Satellite data (planned) from the Copernicus Sentinel-2 mission (ESA). Weather data: [Open-Meteo](https://open-meteo.com) (CC BY 4.0). Map data © OpenStreetMap contributors.
+Satellite data from the Copernicus Sentinel-2 mission (ESA), served by Microsoft Planetary Computer. Land cover from ESA WorldCover 2021. Weather data from [Open-Meteo](https://open-meteo.com) (CC BY 4.0). Field outlines traced over Esri World Imagery. Map data © OpenStreetMap contributors.

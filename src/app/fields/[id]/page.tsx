@@ -147,7 +147,9 @@ export default function FieldPage() {
               <p className="mt-2 text-xs text-stone-500">
                 Change over the last 3 readings: <span className="font-medium text-stone-700">{change > 0 ? "+" : ""}{change}%</span>. {field.vegetationIndex.source === "sentinel2"
                   ? "Real Sentinel-2 NDVI from the data script."
-                  : "Values are simulated for the demo and do not come from a satellite."}
+                  : s.some((r) => r.source === "real")
+                    ? `Real Sentinel-2 NDVI except ${s.filter((r) => r.source !== "real").length} simulated reading(s), marked in orange.`
+                    : "Values are simulated for the demo and do not come from a satellite."}
               </p>
             </div>
           </Card>

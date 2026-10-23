@@ -219,7 +219,7 @@ export default function OverviewPage() {
             title="Map preview"
             description={
               state.data.origin === "data_files"
-                ? "Outlines from data/fields.geojson · simulated, not a satellite image"
+                ? "Real field outlines traced near Kitale · outlines only, not a satellite image"
                 : "Built-in sample outlines · not a satellite image"
             }
             action={
@@ -283,9 +283,13 @@ export default function OverviewPage() {
 
       <DemoNotice>
         {state.cooperative.name}, its farmers and advisers are fictional.{" "}
-        {state.fields.every((f) => f.vegetationIndex.source === "sentinel2")
-          ? "Greenness values are real Sentinel-2 NDVI from the data script; anomalies are rule-based signals, not diagnoses."
-          : "Greenness values are simulated (labeled per field), not satellite measurements."}
+        {(() => {
+          const all = state.fields.flatMap((f) => f.vegetationIndex.series);
+          const real = all.filter((r) => r.source === "real").length;
+          if (real === 0) return "Greenness values are simulated, not satellite measurements.";
+          if (real === all.length) return "Greenness values are real Sentinel-2 NDVI. Alerts are rule-based signals, not diagnoses.";
+          return `${real} of ${all.length} greenness readings are real Sentinel-2 NDVI; the ${all.length - real} simulated ones are marked on each field's chart. Alerts are rule-based signals, not diagnoses.`;
+        })()}
       </DemoNotice>
     </div>
   );
