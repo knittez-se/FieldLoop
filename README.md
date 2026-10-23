@@ -158,7 +158,7 @@ To move to a real backend, keep the action signatures in `store.ts` and replace 
 
 ## How this relates to existing tools
 
-Tools such as CropSense, OpenFarm and Open Farm Analytics already offer satellite crop monitoring and alerts. We are not trying to build a better map. FarmSignal focuses on the workflow after the alert: assigning the check, collecting the report, and tracking it to resolution. We have only reviewed these products' public websites, so some of their features may go further than we describe.
+Satellite crop monitoring and farm advice already exist: EOSDA Crop Monitoring (change alerts, a field leaderboard, scouting reports), OneSoil (free NDVI maps that flag problem spots), Farmonaut (WhatsApp-based satellite reports for smallholders), Cropin and Farmforce (field-team and outgrower management), Plantix (photo diagnosis) and Digital Green's FarmerChat (voice and WhatsApp advice). We are not trying to build a better map or a better chatbot. FarmSignal focuses on the workflow after the alert for a cooperative with few advisers: which field to visit first and why, what to check, an AI that reads the adviser's report, and tracking each case to resolution. See [docs/COMPETITOR_RESEARCH.md](docs/COMPETITOR_RESEARCH.md). We have only reviewed these products' public websites, so some of their features may go further than we describe.
 
 ## Roadmap
 
