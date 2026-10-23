@@ -157,6 +157,8 @@ Plan and reasoning: `docs/COMPETITOR_RESEARCH.md` (Part 2). Same split and branc
 
 ## B builds
 
+Status 23 Oct evening: all five items below were built on `dev` (by the Area A agent while Cursor paused).
+
 1. **Onboarding quiz** (5 steps, skippable with "Use demo farms"): role → region (map centers) → crops + hectares → pick fields on the map (tap to select, "Select all") → advisers (adviser/NGO only). End screen: summary + data-mode switch + "Go to Today".
 2. **Time-lapse on the map**: play/pause + week slider using `greennessTimeline`. Color scale from brown (low) to green (high). Simulated weeks get a small "simulated" mark.
 3. **Simpler Overview ("Today")**: `todayBriefing` + one big button first, then the queue, then capacity/impact, then the rest.

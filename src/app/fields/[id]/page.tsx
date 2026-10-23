@@ -40,6 +40,7 @@ export default function FieldPage() {
   const farm = farmFor(state, field);
   const status = fieldStatus(state, field.id);
   const anomalies = fieldAnomalies(state, field.id);
+  const openAnomaly = anomalies.find((a) => a.status === "open" || a.status === "under_review");
   const steps = recommendedNextSteps(state, field);
   const history = state.inspections.filter((t) => t.fieldId === field.id).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const observations = state.observations.filter((o) => o.fieldId === field.id);
@@ -91,6 +92,30 @@ export default function FieldPage() {
         </Card>
       </div>
 
+      {openAnomaly && (
+        <Card className="border-brand-300">
+          <div className="grid gap-4 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-start sm:p-5">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-brand-700">Why flagged</div>
+              <p className="mt-1 text-sm text-stone-800">{openAnomaly.observed.split(/(?<=\.)\s/)[0]}</p>
+            </div>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-brand-700">What to check</div>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-stone-800">
+                {openAnomaly.verifyOnSite.slice(0, 3).map((v) => (
+                  <li key={v}>{v}</li>
+                ))}
+              </ul>
+            </div>
+            {status.task && (
+              <Button href={`/inspections/${status.task.id}/visit`} className="min-h-11">
+                {status.task.status === "in_progress" ? "Continue visit" : "Start visit"}
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
+
       <Card>
         <CardHeader
           icon={ClipboardList}
@@ -127,11 +152,17 @@ export default function FieldPage() {
             {anomalies.length === 0 ? (
               <EmptyState icon={TriangleAlert} title="No anomalies recorded" description="This field has no flagged signals." />
             ) : (
-              <div className="divide-y divide-stone-100">
-                {anomalies.map((a) => (
-                  <AnomalyCard key={a.id} anomaly={a} />
-                ))}
-              </div>
+              <details className="group">
+                <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-brand-700 hover:bg-stone-50 sm:px-5">
+                  <span className="group-open:hidden">Show the evidence: what was observed, why it matters, possible causes, confidence</span>
+                  <span className="hidden group-open:inline">Hide the evidence</span>
+                </summary>
+                <div className="divide-y divide-stone-100 border-t border-stone-100">
+                  {anomalies.map((a) => (
+                    <AnomalyCard key={a.id} anomaly={a} />
+                  ))}
+                </div>
+              </details>
             )}
           </Card>
 

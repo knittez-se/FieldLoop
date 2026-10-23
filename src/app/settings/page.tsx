@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Bot, CloudRain, Database, RefreshCw, RotateCcw, Satellite, UserRound } from "lucide-react";
-import { resetDemoData, syncFieldData, updateSettings, useAppState } from "@/lib/store";
+import { resetDemoData, resetOnboarding, setDataMode, syncFieldData, updateSettings, useAppState } from "@/lib/store";
 import { formatDateTime } from "@/lib/format";
 import { Badge, Button, Card, CardHeader, PageHeader, PageLoading } from "@/components/ui";
 
@@ -94,6 +94,27 @@ export default function SettingsPage() {
           }
         />
         <div className="space-y-3 p-4 text-sm sm:p-5">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Data source">
+            {(
+              [
+                ["showcase", "Showcase data (simulated)"],
+                ["real", "Real data (Kitale)"],
+              ] as const
+            ).map(([mode, label]) => (
+              <Button
+                key={mode}
+                size="sm"
+                variant={(state.settings.dataMode ?? "showcase") === mode ? "primary" : "secondary"}
+                aria-pressed={(state.settings.dataMode ?? "showcase") === mode}
+                onClick={() => setDataMode(mode)}
+              >
+                {label}
+              </Button>
+            ))}
+            <Button size="sm" variant="ghost" onClick={() => resetOnboarding()}>
+              Retake setup quiz
+            </Button>
+          </div>
           <ul className="space-y-1 text-stone-700">
             <li>
               {state.fields.length} fields · {state.data.payload.fields.reduce((n, f) => n + f.readings.length, 0)} greenness readings ·{" "}

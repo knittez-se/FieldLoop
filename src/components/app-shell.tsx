@@ -18,12 +18,13 @@ import {
 import { getLastFieldSync, getPersistError, syncFieldData, useAppState } from "@/lib/store";
 import { activeInspections } from "@/lib/selectors";
 import { cn } from "@/lib/format";
+import { OnboardingQuiz } from "./onboarding-quiz";
 
 const NAV = [
-  { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/map", label: "Field Map", icon: MapIcon },
-  { href: "/inspections", label: "Inspections", icon: ClipboardList },
-  { href: "/reports", label: "Field Reports", icon: FileText },
+  { href: "/", label: "Today", icon: LayoutDashboard },
+  { href: "/map", label: "Map", icon: MapIcon },
+  { href: "/inspections", label: "Visits", icon: ClipboardList },
+  { href: "/reports", label: "Reports", icon: FileText },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -122,6 +123,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
     </>
   );
+
+  // First visit: the quiz personalizes the demo (skippable).
+  if (state && !state.profile) return <OnboardingQuiz state={state} />;
 
   return (
     <div className="min-h-screen lg:flex">

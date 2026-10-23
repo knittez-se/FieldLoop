@@ -9,6 +9,7 @@ import { relativeTime, cn } from "@/lib/format";
 import { ANOMALY_TYPE_LABEL } from "@/lib/labels";
 import type { Priority } from "@/lib/types";
 import { FieldMap, MapLegend } from "@/components/field-map";
+import { GreennessTimelapse } from "@/components/greenness-timelapse";
 import { Badge, Button, Card, DemoNotice, PageHeader, PageLoading, PriorityBadge, ProvenanceTag, StatusBadge } from "@/components/ui";
 
 type Filter = "all" | "attention";
@@ -18,6 +19,7 @@ export default function MapPage() {
   const state = useAppState();
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [filter, setFilter] = useState<Filter>("all");
+  const [view, setView] = useState<"priority" | "timelapse">("priority");
   const status = useMemo(() => (state ? mapStatus(state) : {}), [state]);
 
   if (!state) return <PageLoading />;
@@ -34,24 +36,49 @@ export default function MapPage() {
         description="Select a field or marker to see why it was flagged and what to do next."
         actions={
           <DemoNotice>
-            {state.data.origin === "data_files"
-              ? "Outlines from data/fields.geojson. Not a satellite image."
-              : "Built-in sample outlines in Trans-Nzoia, Kenya. Not a satellite image."}
+            {state.settings.dataMode === "real"
+              ? "Real field outlines near Kitale. Not a satellite image."
+              : "Showcase data (simulated) in Trans-Nzoia, Kenya. Not a satellite image."}
           </DemoNotice>
         }
       />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
         <Card className="p-3">
-          <FieldMap
-            fields={state.fields}
-            status={status}
-            anomalies={state.anomalies}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            className="h-[420px] sm:h-[560px]"
-          />
-          <MapLegend className="mt-3 px-1" />
+          <div className="mb-3 flex w-fit rounded-lg bg-stone-100 p-0.5 text-xs" role="tablist">
+            {(
+              [
+                ["priority", "Priority"],
+                ["timelapse", "Greenness time-lapse"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={view === id}
+                onClick={() => setView(id)}
+                className={cn("rounded-md px-3 py-1.5 font-medium", view === id ? "bg-white shadow-sm" : "text-stone-600")}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {view === "priority" ? (
+            <>
+              <FieldMap
+                fields={state.fields}
+                status={status}
+                anomalies={state.anomalies}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                className="h-[420px] sm:h-[560px]"
+              />
+              <MapLegend className="mt-3 px-1" />
+            </>
+          ) : (
+            <GreennessTimelapse state={state} onSelect={setSelectedId} className="h-[420px] sm:h-[560px]" />
+          )}
         </Card>
 
         <div className="space-y-4">

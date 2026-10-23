@@ -26,17 +26,17 @@ FarmSignal never claims a diagnosis from a satellite image alone. A low vegetati
 
 ## Demo flow (3 minutes)
 
-The demo uses **8 real farm plots west of Kitale, Kenya** with **real Sentinel-2 greenness and real rainfall** (see below). One problem is planted: the last 3 readings of field **F1 (Kapsara East Block)** are lowered and labeled `simulated`, because real fields all dip together before harvest and nothing would stand out otherwise. The cooperative, farmers, advisers and the workflow history are fictional.
+The app opens in **Showcase mode**: 40 simulated smallholder plots in 3 villages around Kitale, Kenya, built to show what FarmSignal is for (a problem that spreads, a dry-spell cluster, a harvest dry-down that is correctly *not* flagged, and a field that recovered after a visit). *Settings → Real data (Kitale)* switches to 8 real plots with real Sentinel-2 greenness and rainfall (one planted problem on F1, labeled simulated). Cooperative, farmers and advisers are fictional.
 
-1. **Overview** — *Inspect first: Kapsara East Block (F1)*. Its greenness fell sharply over the last 3 readings while the other 7 fields did not, and a farmer reported leaf rolling. Press **Start visit**.
-2. **Field Map** — F1 is labeled and drawn in red. The map shows the traced field outlines, not a satellite image.
-3. **Field page** — why it was flagged, what to check, the greenness trend (real readings and the 3 simulated ones are labeled), rainfall, and a **case history** timeline. Ask the Field Agent *"Why does this field need attention?"*.
-4. **Visit** (phone layout) — *Start visit* → tick checks → add a note (or dictate) → add a photo → *Suggest an outcome* → edit it → *Complete visit*. The suggestion only restates the note and does not look at the photo. *Needs follow-up* keeps the field on the queue as a new visit.
-5. **Back to Overview** — a **Queue updated** banner names the field that left and the field that is now first. The case history on the field page shows the completed visit.
-6. **Field Agent** → *Summarize latest findings* separates what was confirmed on site from what is still a hypothesis.
-7. Optional: **Report observation** for another field → a new inspection task is created automatically.
+1. **Setup quiz** (under a minute, skippable): role → region → crops → tap your plots on the map → team size. The demo is rebuilt for exactly those plots.
+2. **Today** — one sentence says what to do: *"8 of 40 fields need a visit. Start with Wanjiru maize plot."* plus why, and whether the visits fit the team this week. Press **Start visit**.
+3. **Map → Greenness time-lapse** — press play and watch one plot turn brown, then its neighbours; the rest stays green.
+4. **Field page** — *Why flagged* and *What to check* first; the full evidence (observed / why it matters / possible causes / confidence) opens on demand. Greenness trend with real and simulated readings marked, case history, Field Agent.
+5. **Visit** (phone layout) — *Start visit* → tick checks → note (type or dictate) → photo → *Suggest an outcome* (AI reads the note) → edit → *Complete visit*. The suggestion only restates the note and does not look at the photo.
+6. **Back to Today** — a **Queue updated** banner names the field that left and the field that is now first.
+7. Optional: **Report observation** for another field → a new visit is created automatically.
 
-*Reset demo* (sidebar, Overview, Settings) restores the scenario before each run.
+*Reset demo* (sidebar, Settings) restores the scenario before each run. *Settings → Retake setup quiz* starts over.
 
 ![Overview](docs/screenshots/overview-desktop.png)
 
@@ -67,7 +67,8 @@ We want to be upfront about this.
 
 | Part | Status |
 | --- | --- |
-| Satellite data (Sentinel-2) | **Real.** Weekly greenness (NDVI) per field for the last 10 weeks, from Sentinel-2 L2A images, with cloudy readings skipped. The app labels every field whose readings are not all real as "Simulated". |
+| Showcase data (default) | **Simulated.** 40 plots, 4 crops, 4 planted stories; labeled "Showcase data (simulated)" in the app. Built in at `src/lib/builtin-field-data.ts`. |
+| Satellite data (Sentinel-2, *Real data* mode) | **Real.** Weekly greenness (NDVI) per field for the last 10 weeks, from Sentinel-2 L2A images, with cloudy readings skipped. The app labels every field whose readings are not all real as "Simulated". |
 | Problem signal | **One planted problem:** field F1's last 3 readings are lowered and labeled `simulated` in the data. The other 77 readings are real. Real fields all dip together before harvest, so without this no single field stands out. |
 | Weather data | **Real.** Daily rainfall from Open-Meteo for the same 10 weeks (`data/weather.csv`). |
 | Field boundaries | **Real** farm plots west of Kitale, Kenya, traced by hand over satellite photos and checked against ESA WorldCover (81 to 100% cropland). We do not know what crop is planted in each one; the app assumes maize for the demo. Field names are fictional. |

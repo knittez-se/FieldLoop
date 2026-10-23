@@ -543,15 +543,16 @@ export function updateSettings(patch: Partial<AppSettings>) {
   update((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
 }
 
-/** Rebuilds the demo from the current field data (keeps the data source, drops all user changes). */
-/** Rebuilds the state from a payload, keeping settings and the onboarding profile. */
-function rebuild(payload: FieldDataPayload, profile = load().profile) {
+/** Rebuilds the state from a payload, keeping settings. profile: "keep" (default), a new one, or null to clear. */
+function rebuild(payload: FieldDataPayload, profile: OnboardingProfile | null | "keep" = "keep") {
   const current = load();
-  state = createSeedState(payload, new Date(), { profile, settings: current.settings });
+  const next = profile === "keep" ? current.profile : (profile ?? undefined);
+  state = createSeedState(payload, new Date(), { profile: next, settings: current.settings });
   persist(state);
   emit();
 }
 
+/** Rebuilds the demo from the current field data (keeps the data source and quiz answers, drops user changes). */
 export function resetDemoData() {
   rebuild(load().data.payload);
 }
@@ -570,7 +571,7 @@ export function completeOnboarding(profile: OnboardingProfile) {
 
 /** Shows the quiz again (keeps the data). */
 export function resetOnboarding() {
-  rebuild(load().data.payload, undefined);
+  rebuild(load().data.payload, null);
 }
 
 let syncPromise: Promise<FieldSyncResult> | null = null;

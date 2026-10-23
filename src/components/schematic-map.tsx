@@ -1,9 +1,9 @@
 "use client";
 
 /** Dependency-free SVG fallback map: projects field boundaries into a box. */
-import type { Anomaly, Field } from "@/lib/types";
+import type { Anomaly } from "@/lib/types";
 import { PRIORITY_COLOR } from "./ui";
-import type { MapFieldStatus } from "./field-map";
+import type { MapField, MapFieldStatus } from "./field-map";
 import { cn } from "@/lib/format";
 
 export function SchematicMap({
@@ -13,13 +13,15 @@ export function SchematicMap({
   selectedId,
   onSelect,
   className,
+  colorFor,
 }: {
-  fields: Field[];
+  fields: MapField[];
   status: Record<string, MapFieldStatus>;
   anomalies: Anomaly[];
   selectedId?: string;
   onSelect?: (id: string) => void;
   className?: string;
+  colorFor?: (fieldId: string) => string | undefined;
 }) {
   const pts = fields.flatMap((f) => f.boundary);
   if (pts.length === 0) return null;
@@ -41,12 +43,12 @@ export function SchematicMap({
       <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full" role="img" aria-label="Schematic field map">
         {fields.map((f) => {
           const st = status[f.id] ?? { level: "ok" as const, hasActiveInspection: false };
-          const color = PRIORITY_COLOR[st.level];
+          const color = colorFor?.(f.id) ?? PRIORITY_COLOR[st.level];
           const d = f.boundary.map((p, i) => `${i ? "L" : "M"}${project(p).join(",")}`).join(" ") + "Z";
           const [cx, cy] = project(f.centroid);
           return (
             <g key={f.id} className="cursor-pointer" onClick={() => onSelect?.(f.id)}>
-              <path d={d} fill={color} fillOpacity={f.id === selectedId ? 0.45 : 0.28} stroke={f.id === selectedId ? "#111827" : color} strokeWidth={f.id === selectedId ? 6 : 2} />
+              <path d={d} fill={color} fillOpacity={colorFor ? 0.8 : f.id === selectedId ? 0.45 : 0.28} stroke={f.id === selectedId ? "#111827" : color} strokeWidth={f.id === selectedId ? 6 : 2} />
               <text x={cx} y={cy} textAnchor="middle" fontSize="20" fontWeight="700" fill="#1c1f1d">
                 {f.name}
               </text>

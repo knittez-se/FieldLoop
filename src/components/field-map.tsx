@@ -21,8 +21,13 @@ export interface MapFieldStatus {
   score?: number;
 }
 
+/** The few field properties the map needs (quiz candidates are not full Fields). */
+export type MapField = Pick<Field, "id" | "name" | "boundary" | "centroid" | "areaHa">;
+
 export interface FieldMapProps {
-  fields: Field[];
+  fields: MapField[];
+  /** Optional fill/stroke color per field (time-lapse, quiz selection); overrides the priority color. */
+  colorFor?: (fieldId: string) => string | undefined;
   status: Record<string, MapFieldStatus>;
   anomalies: Anomaly[];
   selectedId?: string;
@@ -35,7 +40,7 @@ export interface FieldMapProps {
 type LeafletModule = typeof Leaflet;
 
 export function FieldMap(props: FieldMapProps) {
-  const { fields, status, anomalies, selectedId, onSelect, className, compact } = props;
+  const { fields, status, anomalies, selectedId, onSelect, className, compact, colorFor } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Leaflet.Map | null>(null);
   const layerRef = useRef<Leaflet.LayerGroup | null>(null);
@@ -98,15 +103,15 @@ export function FieldMap(props: FieldMapProps) {
 
     fields.forEach((field) => {
       const st = status[field.id] ?? { level: "ok", hasActiveInspection: false };
-      const color = PRIORITY_COLOR[st.level];
+      const color = colorFor?.(field.id) ?? PRIORITY_COLOR[st.level];
       const selected = field.id === selectedId;
       const poly = L.polygon(field.boundary, {
         color: selected ? "#111827" : color,
         weight: selected ? 4 : 2,
         fillColor: color,
-        fillOpacity: selected ? 0.45 : 0.28,
+        fillOpacity: colorFor ? 0.8 : selected ? 0.45 : 0.28,
       }).on("click", () => onSelectRef.current?.(field.id));
-      if (compact) {
+      if (compact || fields.length > 12) {
         poly.bindTooltip(`<strong>${field.name}</strong><br/>${field.id} · ${field.areaHa} ha`, { sticky: true });
       } else {
         poly.bindTooltip(field.name, { permanent: true, direction: "center", className: "fs-field-label", opacity: 1 });
@@ -149,7 +154,7 @@ export function FieldMap(props: FieldMapProps) {
       map.fitBounds(bounds, { padding: [24, 24] });
       fittedRef.current = fitKey;
     }
-  }, [fields, status, anomalies, selectedId, loadState]);
+  }, [fields, status, anomalies, selectedId, loadState, colorFor]);
 
   // Pan to the selected field.
   useEffect(() => {
@@ -169,6 +174,7 @@ export function FieldMap(props: FieldMapProps) {
         selectedId={selectedId}
         onSelect={onSelect}
         className={className}
+        colorFor={colorFor}
       />
     );
   }

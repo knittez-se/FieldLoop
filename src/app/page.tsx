@@ -14,7 +14,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useAppState } from "@/lib/store";
-import { activeInspections, adviserName, dashboardStats, lastQueueChange, mapStatus } from "@/lib/selectors";
+import { activeInspections, adviserName, dashboardStats, impactSummary, lastQueueChange, mapStatus, todayBriefing, weeklyCapacity } from "@/lib/selectors";
 import { relativeTime } from "@/lib/format";
 import { OUTCOME_LABEL, CATEGORY_LABEL } from "@/lib/labels";
 import { ActivityFeed } from "@/components/activity-feed";
@@ -43,11 +43,14 @@ export default function OverviewPage() {
       stats: dashboardStats(state),
       queue: activeInspections(state),
       status: mapStatus(state),
+      briefing: todayBriefing(state),
+      capacity: weeklyCapacity(state),
+      impact: impactSummary(state),
     };
   }, [state]);
 
   if (!state || !derived) return <PageLoading />;
-  const { stats, queue, status } = derived;
+  const { stats, queue, status, briefing, capacity, impact } = derived;
   const top = queue[0];
   const user = state.advisers.find((a) => a.id === state.settings.currentUserId);
   const promotedTaskId = lastQueueChange(state)?.moves.find((move) => move.toRank === 1 && move.movement !== "same")?.inspectionId;
@@ -81,8 +84,8 @@ export default function OverviewPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow={`${state.cooperative.name} · ${state.cooperative.region}`}
-        title={`Hello${user ? `, ${user.name.split(" ")[0]}` : ""}`}
-        description="Here is what needs your attention across the cooperative's maize fields."
+        title={`Today${user ? ` · ${user.name.split(" ")[0]}` : ""}`}
+        description={`${impact.fieldsMonitored} fields · ${impact.hectares} ha watched by satellite. ${impact.visitsAvoidedPct}% need no visit this week.`}
         actions={
           <>
             <Button variant="secondary" href="/map" icon={MapIcon}>
@@ -108,10 +111,13 @@ export default function OverviewPage() {
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-semibold uppercase tracking-wide text-brand-700">Inspect first</div>
-                <div className="mt-0.5 text-base font-semibold text-stone-900">
-                  {top.field?.name} <span className="font-normal text-stone-500">({top.task.fieldId})</span>
-                </div>
-                <p className="mt-0.5 line-clamp-2 text-sm text-stone-600">{top.task.reason}</p>
+                <div className="mt-0.5 text-lg font-semibold text-stone-900 text-balance">{briefing.headline}</div>
+                <p className="mt-1 text-sm text-stone-600">{briefing.detail}</p>
+                <p className="mt-1 text-xs text-stone-500">
+                  {capacity.visitsNeeded} visit{capacity.visitsNeeded === 1 ? "" : "s"} this week · about {capacity.adviserDays} adviser-day
+                  {capacity.adviserDays === 1 ? "" : "s"} for your team of {capacity.advisers}
+                  {capacity.fits ? "" : " — more than your team can do, start at the top"}
+                </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <PriorityBadge level={top.priority.level} score={top.priority.score} />
                   <StatusBadge status={top.task.status} />
