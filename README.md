@@ -88,7 +88,7 @@ Ideas beyond the hackathon, not built yet:
 ## Team
 
 - Dominik Knitter
-- TODO: teammate name
+- Ivan Ivanovic
 
 ## Acknowledgements
 
