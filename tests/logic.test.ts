@@ -10,7 +10,7 @@ import { scoreInspection, levelForScore } from "../src/lib/priority";
 import { analyzeReportDemo, type ReportInput } from "../src/lib/agent/report";
 import { createSeedState } from "../src/lib/demo-data";
 import { BUILTIN_FIELD_DATA } from "../src/lib/builtin-field-data";
-import { activeInspections, dashboardStats, greennessTimeline, impactSummary, lastQueueChange, todayBriefing, weeklyCapacity } from "../src/lib/selectors";
+import { activeInspections, changeGroups, dashboardStats, greennessChange, greennessTimeline, impactSummary, lastQueueChange, todayBriefing, weeklyCapacity } from "../src/lib/selectors";
 
 const weeks = (n: number, end = "2026-10-19") =>
   Array.from({ length: n }, (_, i) => new Date(new Date(end).getTime() - (n - 1 - i) * 7 * 86_400_000).toISOString().slice(0, 10));
@@ -241,6 +241,18 @@ test("briefing, impact and timeline are derived from the data", () => {
   assert.equal(t.weeks.length, 10);
   const kap08 = t.byField["KAP-08"].map((x) => x.value as number);
   assert.ok(kap08[9] < kap08[5] - 0.1, "the spreading problem is visible in the time-lapse");
+});
+
+test("greenness change compares the newest reading with the one 3 readings earlier", () => {
+  const s = createSeedState(BUILTIN_FIELD_DATA, new Date("2026-10-23T12:00:00Z"));
+  const f = s.fields[0];
+  f.vegetationIndex.series = [0.5, 0.5, 0.6, 0.5, 0.4, 0.3].map((value, i) => ({ date: `2026-09-0${i + 1}`, value, source: "real" as const }));
+  const c = greennessChange(s).find((x) => x.field.id === f.id)!;
+  assert.equal(c.pct, -50); // 0.3 vs 0.6
+  assert.equal(c.simulated, false);
+  const groups = changeGroups(s);
+  assert.equal(groups.reduce((n, g) => n + g.count, 0), s.fields.length, "every field lands in exactly one group");
+  assert.ok(groups[0].count >= 1, "the -50% field is falling fast");
 });
 
 test("briefing does not repeat the farmer report when it is the only reason", () => {

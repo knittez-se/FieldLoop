@@ -259,3 +259,28 @@ export function greennessTimeline(state: AppState) {
   });
   return { weeks, byField };
 }
+
+/** Greenness change per field: newest reading vs. the reading 3 readings (about 3 weeks) earlier. */
+export function greennessChange(state: AppState) {
+  return state.fields.map((field) => {
+    const s = [...field.vegetationIndex.series].sort((a, b) => a.date.localeCompare(b.date));
+    const last = s[s.length - 1];
+    const before = s[s.length - 4];
+    const pct = last && before && before.value > 0 ? Math.round(((last.value - before.value) / before.value) * 100) : null;
+    return { field, pct, simulated: !!last && (last.source !== "real" || before?.source !== "real") };
+  });
+}
+
+/** The five change groups shown on Today, from falling fast to rising fast. */
+export const CHANGE_GROUPS = [
+  { id: "fall-fast", label: "Falling fast", range: "below −20%", test: (p: number) => p < -20 },
+  { id: "fall", label: "Falling", range: "−20 to −5%", test: (p: number) => p >= -20 && p < -5 },
+  { id: "steady", label: "Steady", range: "−5 to +5%", test: (p: number) => p >= -5 && p <= 5 },
+  { id: "rise", label: "Rising", range: "+5 to +20%", test: (p: number) => p > 5 && p <= 20 },
+  { id: "rise-fast", label: "Rising fast", range: "above +20%", test: (p: number) => p > 20 },
+] as const;
+
+export function changeGroups(state: AppState) {
+  const changes = greennessChange(state).filter((c) => c.pct !== null);
+  return CHANGE_GROUPS.map((g) => ({ ...g, count: changes.filter((c) => g.test(c.pct!)).length }));
+}

@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  ChevronsUpDown,
   ClipboardList,
   FileText,
   LayoutDashboard,
   Map as MapIcon,
   Menu,
   Plus,
+  RotateCcw,
   Settings,
   Sprout,
   TriangleAlert,
@@ -18,6 +20,7 @@ import {
 import { getLastFieldSync, getPersistError, syncFieldData, useAppState } from "@/lib/store";
 import { activeInspections } from "@/lib/selectors";
 import { cn } from "@/lib/format";
+import { CoopBanner } from "./coop-banner";
 import { OnboardingQuiz } from "./onboarding-quiz";
 
 const NAV = [
@@ -25,12 +28,28 @@ const NAV = [
   { href: "/map", label: "Map", icon: MapIcon },
   { href: "/inspections", label: "Visits", icon: ClipboardList },
   { href: "/reports", label: "Reports", icon: FileText },
-  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/" || pathname.startsWith("/fields");
   return pathname === href || pathname.startsWith(href + "/");
+}
+
+function NavLink({ href, label, icon: Icon, active, count }: { href: string; label: string; icon: typeof MapIcon; active: boolean; count?: number }) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex min-h-10 items-center gap-2.5 rounded-xl px-3 text-[15px] font-medium transition-colors",
+        active ? "bg-white text-stone-900 shadow-sm ring-1 ring-hairline" : "text-stone-600 hover:text-stone-900",
+      )}
+      aria-current={active ? "page" : undefined}
+    >
+      <Icon className="h-[18px] w-[18px] shrink-0" />
+      <span className="flex-1">{label}</span>
+      {count !== undefined && count > 0 && <span className="text-[13px] tabular-nums text-stone-400">{count}</span>}
+    </Link>
+  );
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -52,74 +71,50 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
   void getLastFieldSync;
 
-  const nav = (
-    <nav className="flex flex-col gap-0.5" aria-label="Main">
-      {NAV.map(({ href, label, icon: Icon }) => {
-        const active = isActive(pathname, href);
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              active ? "bg-brand-600 text-white" : "text-brand-100 hover:bg-brand-800 hover:text-white",
-            )}
-            aria-current={active ? "page" : undefined}
-          >
-            <Icon className="h-4 w-4" />
-            <span className="flex-1">{label}</span>
-            {href === "/inspections" && openCount !== undefined && openCount > 0 && (
-              <span
-                className={cn(
-                  "rounded-full px-1.5 text-[11px] font-semibold tabular-nums",
-                  active ? "bg-white/20" : "bg-brand-700 text-brand-100",
-                )}
-              >
-                {openCount}
-              </span>
-            )}
-          </Link>
-        );
-      })}
-    </nav>
+  const logo = (
+    <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-forest">
+      <Sprout className="h-6 w-6 text-emerald-600" />
+      FarmSignal
+    </Link>
   );
 
   const sidebarBody = (
     <>
-      <Link href="/" className="flex items-center gap-2 px-3 pb-6 pt-1">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500">
-          <Sprout className="h-4.5 w-4.5 text-white" />
-        </div>
-        <div>
-          <div className="text-[15px] font-semibold tracking-tight text-white">FarmSignal</div>
-          <div className="text-[11px] text-brand-300">Field operations</div>
-        </div>
-      </Link>
-      <Link
-        href="/reports/new"
-        className="mx-1 mb-4 flex items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-brand-800 shadow-sm hover:bg-brand-50"
-      >
-        <Plus className="h-4 w-4" /> Report observation
-      </Link>
-      {nav}
-      <div className="mt-auto space-y-3 px-3 pt-6 text-xs">
-        {state && (
-          <div className="rounded-lg bg-brand-800/70 p-3">
-            <div className="font-medium text-white">{state.cooperative.name}</div>
-            <div className="text-brand-300">{state.cooperative.region}</div>
-            <div className="mt-2 inline-block rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
-              Fictional cooperative
-            </div>
+      <div className="px-2">{logo}</div>
+      {state && (
+        <div className="flex items-center gap-2.5 rounded-xl border border-hairline bg-white p-2">
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-forest text-lime">
+            <Sprout className="h-[18px] w-[18px]" />
           </div>
-        )}
-        {user && (
-          <div className="text-brand-200">
-            Signed in as <span className="font-medium text-white">{user.name}</span>
+          <div className="min-w-0 leading-tight">
+            <div className="truncate text-sm font-semibold">{state.cooperative.name}</div>
+            <div className="text-xs text-stone-500">Fictional cooperative</div>
           </div>
-        )}
-        <Link href="/settings#reset-demo" className="inline-block font-medium text-brand-100 underline-offset-2 hover:underline">
-          Reset demo
+          <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 text-stone-400" aria-hidden="true" />
+        </div>
+      )}
+      <nav className="flex flex-col gap-0.5" aria-label="Main">
+        {NAV.map(({ href, label, icon }) => (
+          <NavLink
+            key={href}
+            href={href}
+            label={label}
+            icon={icon}
+            active={isActive(pathname, href)}
+            count={href === "/inspections" ? openCount : href === "/map" ? state?.fields.length : undefined}
+          />
+        ))}
+      </nav>
+      <div className="mt-auto flex flex-col gap-0.5 border-t border-hairline pt-3">
+        <NavLink href="/settings" label="Settings" icon={Settings} active={isActive(pathname, "/settings")} />
+        <Link href="/settings#reset-demo" className="flex min-h-10 items-center gap-2.5 rounded-xl px-3 text-[15px] font-medium text-stone-600 hover:text-stone-900">
+          <RotateCcw className="h-[18px] w-[18px]" /> Reset demo
         </Link>
+        {user && (
+          <div className="px-3 pt-2 text-xs text-stone-500">
+            Signed in as <span className="font-medium text-stone-800">{user.name}</span>
+          </div>
+        )}
       </div>
     </>
   );
@@ -130,21 +125,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen lg:flex">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto bg-brand-900 p-3 lg:flex">{sidebarBody}</aside>
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-5 overflow-y-auto border-r border-hairline bg-[#f7f9f7] px-4 py-6 lg:flex">
+        {sidebarBody}
+      </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-[1100] flex items-center justify-between border-b border-stone-200 bg-white/95 px-4 py-2.5 backdrop-blur lg:hidden">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600">
-            <Sprout className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-semibold tracking-tight">FarmSignal</span>
-        </Link>
+      <header className="sticky top-0 z-[1100] flex items-center justify-between border-b border-hairline bg-white/95 px-4 py-2.5 backdrop-blur lg:hidden">
+        {logo}
         <div className="flex items-center gap-1">
-          <Link href="/reports/new" className="rounded-lg p-2 text-brand-700 hover:bg-brand-50" aria-label="Report observation">
+          <Link href="/reports/new" className="grid h-11 w-11 place-items-center rounded-xl text-forest hover:bg-stone-100" aria-label="Report observation">
             <Plus className="h-5 w-5" />
           </Link>
-          <button type="button" onClick={() => setOpen(true)} className="rounded-lg p-2 hover:bg-stone-100" aria-label="Open menu">
+          <button type="button" onClick={() => setOpen(true)} className="grid h-11 w-11 place-items-center rounded-xl border border-hairline bg-white" aria-label="Open menu">
             <Menu className="h-5 w-5" />
           </button>
         </div>
@@ -154,11 +146,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       {open && (
         <div className="fixed inset-0 z-[1200] lg:hidden" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-72 flex-col overflow-y-auto bg-brand-900 p-3">
+          <div className="absolute inset-y-0 left-0 flex w-72 flex-col gap-5 overflow-y-auto bg-[#f7f9f7] px-4 py-6">
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="absolute right-2 top-2 rounded-lg p-2 text-brand-200 hover:bg-brand-800"
+              className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-xl text-stone-500 hover:bg-stone-100"
               aria-label="Close menu"
             >
               <X className="h-5 w-5" />
@@ -182,7 +174,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             <TriangleAlert className="h-4 w-4" /> {persistError}
           </div>
         )}
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+          {/* On phones the banner only shows on Today, so field screens stay focused. */}
+          {state && <CoopBanner state={state} isPageTitle={pathname === "/"} className={cn("mb-6", pathname === "/" ? "flex" : "hidden lg:flex")} />}
+          {children}
+        </div>
       </main>
     </div>
   );

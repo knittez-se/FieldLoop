@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { Figtree } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
@@ -10,12 +11,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1b3626",
+  themeColor: "#0e3d21",
 };
+
+const figtree = Figtree({ subsets: ["latin"], variable: "--font-figtree" });
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={figtree.variable}>
       <body>
         <AppShell>{children}</AppShell>
       </body>
