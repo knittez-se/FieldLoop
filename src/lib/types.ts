@@ -14,7 +14,8 @@ export type DataSource =
   | "farmer_report" // entered by a farmer
   | "adviser" // entered by a field adviser
   | "open_meteo" // live weather from the Open-Meteo API
-  | "sentinel2"; // reserved for a future real Sentinel-2 integration
+  | "weather_file" // rainfall from data/weather.csv
+  | "sentinel2"; // real Sentinel-2 NDVI from the data script (source = real)
 
 export type Priority = "high" | "medium" | "low";
 export type Severity = "high" | "medium" | "low";
@@ -45,14 +46,13 @@ export interface Field {
   farmId: string;
   name: string;
   crop: "maize";
-  variety: string;
+  variety?: string;
   growthStage: string;
-  plantingDate: string;
   areaHa: number;
   centroid: LatLng;
   boundary: LatLng[];
-  /** Field boundaries in the demo are generated, not surveyed. */
-  boundarySource: "demo_sample" | "surveyed";
+  /** "data_file" = outline from data/fields.geojson, "generated" = placeholder square. */
+  boundarySource: "data_file" | "builtin_sample" | "generated";
   lastObservationAt: string;
   lastInspectionAt?: string;
   vegetationIndex: {
@@ -171,8 +171,8 @@ export interface InspectionReport {
 
 export interface WeatherObservation {
   date: string;
-  tempMaxC: number;
-  tempMinC: number;
+  tempMaxC?: number;
+  tempMinC?: number;
   precipitationMm: number;
   source: DataSource;
 }
@@ -204,7 +204,7 @@ export interface AppSettings {
 export interface AppState {
   version: number;
   seededAt: string;
-  cooperative: { name: string; region: string; fictional: true };
+  cooperative: { name: string; region: string; fictional: true; center: LatLng };
   advisers: Adviser[];
   farms: Farm[];
   fields: Field[];
@@ -212,7 +212,15 @@ export interface AppState {
   observations: FieldObservation[];
   inspections: InspectionTask[];
   reports: InspectionReport[];
-  weather: Record<string, WeatherObservation[]>; // keyed by farmId
+  /** Daily weather for the demo area. */
+  weather: WeatherObservation[];
+  /** Which field data the state was built from (see field-data.ts). */
+  data: {
+    hash: string;
+    origin: "data_files" | "built_in";
+    warnings: string[];
+    payload: import("./field-data").FieldDataPayload;
+  };
   activity: ActivityEvent[];
   settings: AppSettings;
 }

@@ -14,7 +14,9 @@
  * UI components only use `useAppState()` and the action functions below.
  */
 import { useSyncExternalStore } from "react";
+import { BUILTIN_FIELD_DATA } from "./builtin-field-data";
 import { createSeedState, STATE_VERSION } from "./demo-data";
+import { hashPayload, type FieldDataPayload } from "./field-data";
 import { CATEGORY_LABEL } from "./labels";
 import type {
   ActivityEvent,
@@ -48,7 +50,7 @@ function load(): AppState {
   } catch {
     // corrupted or unavailable storage → fall back to fresh demo data
   }
-  state = createSeedState();
+  state = createSeedState(BUILTIN_FIELD_DATA);
   persist(state);
   return state;
 }
@@ -451,8 +453,63 @@ export function updateSettings(patch: Partial<AppSettings>) {
   update((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
 }
 
+/** Rebuilds the demo from the current field data (keeps the data source, drops all user changes). */
 export function resetDemoData() {
-  state = createSeedState();
+  const payload = load().data.payload;
+  const keepSettings = load().settings;
+  state = { ...createSeedState(payload), settings: keepSettings };
   persist(state);
   emit();
+}
+
+let syncPromise: Promise<FieldSyncResult> | null = null;
+let lastSync: FieldSyncResult | null = null;
+
+export interface FieldSyncResult {
+  status: "unchanged" | "rebuilt" | "unavailable";
+  origin?: FieldDataPayload["origin"];
+  message?: string;
+}
+
+export function getLastFieldSync() {
+  return lastSync;
+}
+
+/**
+ * Loads field data from /api/field-data (the files in data/). If the data differs from what
+ * the current state was built from, the demo state is rebuilt from the new data.
+ * Called once per page load by the app shell; `force` re-checks (Settings → Reload data).
+ */
+export function syncFieldData(force = false): Promise<FieldSyncResult> {
+  if (syncPromise && !force) return syncPromise;
+  syncPromise = (async (): Promise<FieldSyncResult> => {
+    try {
+      const res = await fetch("/api/field-data", { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const payload = (await res.json()) as FieldDataPayload;
+      if (!Array.isArray(payload.fields)) throw new Error("Invalid payload");
+      const current = load();
+      if (current.data.hash === hashPayload(payload)) {
+        lastSync = { status: "unchanged", origin: payload.origin };
+      } else if (payload.fields.length === 0) {
+        lastSync = { status: "unavailable", message: "Data files contain no usable fields. " + payload.warnings.join(" ") };
+      } else {
+        state = { ...createSeedState(payload), settings: current.settings };
+        persist(state);
+        lastSync = {
+          status: "rebuilt",
+          origin: payload.origin,
+          message:
+            payload.origin === "data_files"
+              ? `Loaded ${payload.fields.length} fields from data/. The demo was rebuilt from the new data.`
+              : "Data files not found — using the built-in sample. The demo was rebuilt.",
+        };
+      }
+    } catch (err) {
+      lastSync = { status: "unavailable", message: `Could not load field data (${err instanceof Error ? err.message : "error"}). Showing saved data.` };
+    }
+    emit();
+    return lastSync;
+  })();
+  return syncPromise;
 }

@@ -15,7 +15,7 @@ import {
   TriangleAlert,
   X,
 } from "lucide-react";
-import { getPersistError, useAppState } from "@/lib/store";
+import { getLastFieldSync, getPersistError, syncFieldData, useAppState } from "@/lib/store";
 import { activeInspections } from "@/lib/selectors";
 import { cn } from "@/lib/format";
 
@@ -41,6 +41,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const persistError = state ? getPersistError() : null;
 
   useEffect(() => setOpen(false), [pathname]);
+
+  // Load data/ files once per page load (rebuilds the demo if the data changed).
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
+  useEffect(() => {
+    syncFieldData().then((r) => {
+      if (r.status !== "unchanged" && r.message) setSyncNotice(r.message);
+    });
+  }, []);
+  void getLastFieldSync;
 
   const nav = (
     <nav className="flex flex-col gap-0.5" aria-label="Main">
@@ -153,6 +162,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       <main className="min-w-0 flex-1">
+        {syncNotice && (
+          <div className="flex items-center justify-between gap-2 border-b border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900" role="status">
+            <span>{syncNotice}</span>
+            <button type="button" onClick={() => setSyncNotice(null)} className="rounded p-1 hover:bg-sky-100" aria-label="Dismiss">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
         {persistError && (
           <div className="flex items-center gap-2 border-b border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
             <TriangleAlert className="h-4 w-4" /> {persistError}

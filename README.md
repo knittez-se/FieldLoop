@@ -28,7 +28,9 @@ FarmSignal never claims a diagnosis from a satellite image alone. A low vegetati
 
 The app ships with a fictional cooperative (Nzoia Valley Maize Cooperative, Trans-Nzoia, Kenya) and 8 maize fields.
 
-1. **Overview** — the dashboard says *Inspect first: Kapsara East Block (FS-104)*, score 95. A simulated vegetation index dropped 18% in the north-east section and the farmer reported leaf rolling.
+Field names and IDs below are from the built-in sample; with Dominik's data the top field will be a different one.
+
+1. **Overview** — the dashboard says *Inspect first: Kapsara East Block (FS-104)*, score 95. Its greenness dropped ~21% over three readings while the other fields stayed steady, and the farmer reported leaf rolling.
 2. **Field Map** — FS-104 is red with an anomaly marker. Click it → field panel → *Field details*.
 3. **Field page** — six-part anomaly assessment (observed / why it matters / hypotheses / confidence / verify on site / next action), simulated index trend, weather context. Ask the Field Agent *"Why does this field need attention?"*.
 4. **Inspection** — open INS-1312 → *Start inspection* → tick checks → add a note (or dictate) → add a photo → choose *Issue confirmed*, write findings and a recommendation → *Complete inspection*.
@@ -38,13 +40,29 @@ The app ships with a fictional cooperative (Nzoia Valley Maize Cooperative, Tran
 
 *Settings → Reset demo data* restores the scenario before each run.
 
+## Field data (shared with the data script)
+
+The app reads three files from `data/` (contract in [MVP.md](MVP.md)):
+
+| File | Columns / content |
+| --- | --- |
+| `data/field_scores.csv` | `field_id,date,greenness,source` (`source` = `real` or `simulated`) |
+| `data/fields.geojson` | one Polygon per field with property `field_id` (optional: `name`, `farm`, `growth_stage`) |
+| `data/weather.csv` | `date,rainfall_mm` |
+
+- `GET /api/field-data` reads the files on every page load. If they changed, the demo state is rebuilt from them (a blue notice says so). *Settings → Reload data files* re-checks manually.
+- Without `data/field_scores.csv` the app uses a built-in simulated sample (`src/lib/builtin-field-data.ts`).
+- Any field IDs work (`F1`…`F8` or others). Fields without an outline are drawn as placeholder squares; problems are listed under *Settings → Field data*.
+- **Change detection** (`src/lib/detection.ts`) compares each field's last reading with its own earlier weeks and with the median change of the other fields. Fields that fall clearly behind become anomalies with an open inspection task. Readings with `source = real` are labeled Sentinel-2, everything else "Simulated".
+- The fictional workflow history (a farmer report on the top flagged field, one inspection in progress, two completed reports) is attached automatically to whatever fields the data contains.
+
 ## What is real and what is simulated
 
 | Part | Status |
 | --- | --- |
-| Satellite data (Sentinel-2) | **Simulated.** Vegetation index series are demo data and labeled "Simulated" everywhere in the app. Integration point prepared in `src/lib/services/satellite.ts`. |
-| Weather data | **Live if reachable** via Open-Meteo (free, no key), otherwise clearly labeled sample weather. The demo scenario's dry spell uses the sample data. |
-| Ranking | **Real logic, rule-based** (documented in `src/lib/priority.ts`). Not a validated risk model. |
+| Satellite data (Sentinel-2) | Read from `data/field_scores.csv` (data script). Rows with `source = simulated` and the built-in fallback are labeled "Simulated" in the app. TODO: update once the script produces real numbers. |
+| Weather data | Rainfall from `data/weather.csv` (built-in sample if missing). Optional live Open-Meteo lookup in Settings. |
+| Change detection and ranking | **Real logic, rule-based** (`src/lib/detection.ts`, `src/lib/priority.ts`). Not a validated risk model. |
 | Explanations by the AI agent | **Demo mode** (deterministic, built only from the field records) without an API key; **LLM** (Claude via the Anthropic API) when `ANTHROPIC_API_KEY` is set. |
 | Voice or photo field report | **Real.** Voice uses the browser's speech recognition (Chrome/Edge/Safari); photos are downscaled and stored locally. Photos are not analyzed by AI. |
 | Cooperative, advisors and field boundaries | Simulated for the demo |
@@ -99,10 +117,14 @@ src/
     settings/             Current user, integrations, reset demo
     api/agent/            Field Agent (LLM or demo mode)
     api/weather/          Open-Meteo proxy
+    api/field-data/       Reads the data/ files
   components/             UI components (map, agent, inputs, cards)
   lib/
     types.ts              Domain model (Farm, Field, Anomaly, InspectionTask, ...)
-    demo-data.ts          Fictional seed data — replace with real loaders later
+    field-data.ts         Data contract types + CSV/GeoJSON parsers
+    builtin-field-data.ts Built-in simulated sample (used when data/ is empty)
+    detection.ts          Rule-based change detection (own history + neighbors)
+    demo-data.ts          Builds the app state from field data + fictional workflow history
     store.ts              Data-access layer + actions (localStorage)
     priority.ts           Documented rule-based priority score
     selectors.ts          Derived views / dashboard stats

@@ -23,7 +23,7 @@ function activeAnomalies(ctx: AgentContext) {
 function observedFacts(ctx: AgentContext): string[] {
   const facts: string[] = [];
   activeAnomalies(ctx).forEach((a) =>
-    facts.push(`${a.observed} (source: ${a.source === "simulated_index" ? "simulated demo index" : a.source.replace("_", " ")}).`),
+    facts.push(`${a.observed} (source: ${a.source === "simulated_index" ? "simulated demo data" : a.source === "sentinel2" ? "Sentinel-2" : a.source.replace("_", " ")}).`),
   );
   ctx.observations.slice(0, 3).forEach((o) =>
     facts.push(
@@ -32,7 +32,7 @@ function observedFacts(ctx: AgentContext): string[] {
   );
   if (ctx.weather && ctx.weather.dryDays >= 5) {
     facts.push(
-      `${ctx.weather.dryDays} consecutive days without meaningful rain (${ctx.weather.source === "open_meteo" ? "live weather" : "sample weather"}).`,
+      `${ctx.weather.dryDays} consecutive days without meaningful rain (${ctx.weather.source === "weather_file" ? "data/weather.csv" : ctx.weather.source === "open_meteo" ? "live weather" : "sample weather"}).`,
     );
   }
   return facts;

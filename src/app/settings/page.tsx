@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bot, CloudRain, Database, RotateCcw, Satellite, UserRound } from "lucide-react";
-import { resetDemoData, updateSettings, useAppState } from "@/lib/store";
+import { Bot, CloudRain, Database, RefreshCw, RotateCcw, Satellite, UserRound } from "lucide-react";
+import { resetDemoData, syncFieldData, updateSettings, useAppState } from "@/lib/store";
 import { formatDateTime } from "@/lib/format";
 import { Badge, Button, Card, CardHeader, PageHeader, PageLoading } from "@/components/ui";
 
@@ -11,6 +11,8 @@ export default function SettingsPage() {
   const [agent, setAgent] = useState<{ configured: boolean; model: string | null } | "error" | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     fetch("/api/agent")
@@ -81,22 +83,65 @@ export default function SettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader icon={Satellite} title="Data sources" />
-        <ul className="space-y-2 p-4 text-sm text-stone-700 sm:p-5">
-          <li>
-            <Badge tone="amber">Simulated</Badge> Vegetation index series and anomalies — not satellite measurements.
-          </li>
-          <li>
-            <Badge>Sample</Badge> Cooperative, farms, advisers, field boundaries (generated) and coordinates.
-          </li>
-          <li>
-            <Badge tone="blue">Live (optional)</Badge> Weather via Open-Meteo.
-          </li>
-          <li>
-            <Badge tone="green">User-entered</Badge> Observations, notes, photos and inspection reports.
-          </li>
-          <li className="text-xs text-stone-500">Planned: Copernicus Sentinel-2 vegetation indices per field (see src/lib/services/satellite.ts).</li>
-        </ul>
+        <CardHeader
+          icon={Satellite}
+          title="Field data"
+          description="data/field_scores.csv, data/fields.geojson and data/weather.csv (see MVP.md)"
+          action={
+            <Badge tone={state.data.origin === "data_files" ? "green" : "amber"}>
+              {state.data.origin === "data_files" ? "From data/ files" : "Built-in sample"}
+            </Badge>
+          }
+        />
+        <div className="space-y-3 p-4 text-sm sm:p-5">
+          <ul className="space-y-1 text-stone-700">
+            <li>
+              {state.fields.length} fields · {state.data.payload.fields.reduce((n, f) => n + f.readings.length, 0)} greenness readings ·{" "}
+              {state.weather.length} days of rainfall
+            </li>
+            <li>
+              Greenness:{" "}
+              {(() => {
+                const all = state.data.payload.fields.flatMap((f) => f.readings);
+                const real = all.filter((r) => r.source === "real").length;
+                return real === 0 ? (
+                  <Badge tone="amber">all simulated</Badge>
+                ) : real === all.length ? (
+                  <Badge tone="green">all real (Sentinel-2)</Badge>
+                ) : (
+                  <Badge tone="amber">
+                    {real} real / {all.length - real} simulated
+                  </Badge>
+                );
+              })()}
+            </li>
+            <li className="text-xs text-stone-500">
+              Anomalies are created by transparent rules in src/lib/detection.ts (own history + comparison with the other fields).
+            </li>
+          </ul>
+          {state.data.warnings.length > 0 && (
+            <ul className="space-y-1 rounded-lg bg-amber-50 p-3 text-xs text-amber-900">
+              {state.data.warnings.map((w) => (
+                <li key={w}>⚠ {w}</li>
+              ))}
+            </ul>
+          )}
+          {syncMsg && <p className="text-xs text-stone-700">{syncMsg}</p>}
+          <Button
+            variant="secondary"
+            icon={RefreshCw}
+            disabled={syncing}
+            onClick={async () => {
+              setSyncing(true);
+              const r = await syncFieldData(true);
+              setSyncMsg(r.message ?? "Data unchanged — nothing to reload.");
+              setSyncing(false);
+            }}
+          >
+            {syncing ? "Checking…" : "Reload data files"}
+          </Button>
+          <p className="text-xs text-stone-500">If the data changed, the demo is rebuilt from it and recorded changes are reset.</p>
+        </div>
       </Card>
 
       <Card>

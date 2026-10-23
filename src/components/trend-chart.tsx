@@ -40,7 +40,7 @@ export function TrendChart({ series, height = 140 }: { series: VegetationSample[
           <circle cx={x(i)} cy={y(s.value)} r={3} fill="white" stroke={declining ? "#d97706" : "#3f7f52"} strokeWidth={1.5}>
             <title>{`${s.date}: ${s.value.toFixed(2)}`}</title>
           </circle>
-          {(i === 0 || i === series.length - 1 || i % 2 === 0) && (
+          {(i === 0 || i === series.length - 1 || (i % 2 === 0 && i < series.length - 2)) && (
             <text x={x(i)} y={H - 6} textAnchor={i === 0 ? "start" : i === series.length - 1 ? "end" : "middle"} fontSize="10" fill="#78716c">
               {new Date(s.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
             </text>

@@ -32,7 +32,13 @@ export default function MapPage() {
       <PageHeader
         title="Field Map"
         description="Select a field or marker to see why it was flagged and what to do next."
-        actions={<DemoNotice>Demo coordinates in Trans-Nzoia, Kenya. Boundaries are generated, not surveyed.</DemoNotice>}
+        actions={
+          <DemoNotice>
+            {state.data.origin === "data_files"
+              ? "Field outlines from data/fields.geojson."
+              : "Built-in sample: demo coordinates in Trans-Nzoia, Kenya; outlines are generated, not surveyed."}
+          </DemoNotice>
+        }
       />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">

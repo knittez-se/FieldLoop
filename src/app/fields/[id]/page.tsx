@@ -44,7 +44,7 @@ export default function FieldPage() {
   const history = state.inspections.filter((t) => t.fieldId === field.id).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const observations = state.observations.filter((o) => o.fieldId === field.id);
   const s = field.vegetationIndex.series;
-  const change = s.length > 2 ? Math.round(((s[s.length - 1].value - s[s.length - 3].value) / s[s.length - 3].value) * 100) : 0;
+  const change = s.length > 3 ? Math.round(((s[s.length - 1].value - s[s.length - 4].value) / s[s.length - 4].value) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -77,7 +77,7 @@ export default function FieldPage() {
 
       {/* Key facts */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <Fact icon={Sprout} label="Crop" value={`Maize · ${field.variety}`} />
+        <Fact icon={Sprout} label="Crop" value={field.variety ? `Maize · ${field.variety}` : "Maize"} />
         <Fact icon={Leaf} label="Growth stage" value={field.growthStage} />
         <Fact icon={Ruler} label="Approx. area" value={`${field.areaHa} ha`} />
         <Fact icon={Calendar} label="Last observation" value={relativeTime(field.lastObservationAt)} />
@@ -136,8 +136,9 @@ export default function FieldPage() {
             <div className="p-4 sm:p-5">
               <TrendChart series={field.vegetationIndex.series} />
               <p className="mt-2 text-xs text-stone-500">
-                Change over the last 10 days: <span className="font-medium text-stone-700">{change > 0 ? "+" : ""}{change}%</span>. Values are
-                simulated for the demo and do not come from a satellite.
+                Change over the last 3 readings: <span className="font-medium text-stone-700">{change > 0 ? "+" : ""}{change}%</span>. {field.vegetationIndex.source === "sentinel2"
+                  ? "Real Sentinel-2 NDVI from the data script."
+                  : "Values are simulated for the demo and do not come from a satellite."}
               </p>
             </div>
           </Card>
@@ -218,7 +219,7 @@ export default function FieldPage() {
 
         <div className="space-y-6">
           <FieldAgent state={state} fieldId={field.id} />
-          <WeatherCard farm={farm} sample={state.weather[field.farmId] ?? []} live={state.settings.liveWeather} />
+          <WeatherCard location={field.centroid} sample={state.weather} live={state.settings.liveWeather} />
           <Card>
             <CardHeader title="Recent activity" />
             <ActivityFeed events={state.activity.filter((e) => e.fieldId === field.id)} fields={state.fields} showField={false} limit={6} />

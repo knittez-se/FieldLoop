@@ -262,8 +262,10 @@ export default function OverviewPage() {
       </div>
 
       <DemoNotice>
-        {state.cooperative.name}, its farms, advisers and all anomalies are fictional. Vegetation index values are simulated, not
-        satellite measurements.
+        {state.cooperative.name}, its farmers and advisers are fictional.{" "}
+        {state.fields.every((f) => f.vegetationIndex.source === "sentinel2")
+          ? "Greenness values are real Sentinel-2 NDVI from the data script; anomalies are rule-based signals, not diagnoses."
+          : "Greenness values are simulated (labeled per field), not satellite measurements."}
       </DemoNotice>
     </div>
   );

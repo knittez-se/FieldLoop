@@ -97,14 +97,16 @@ export function adviserName(state: AppState, id: string | undefined) {
 }
 
 export function weatherSummary(state: AppState, field: Field) {
-  const series = state.weather[field.farmId] ?? [];
+  void field; // one weather series for the whole demo area
+  const series = state.weather;
   const last7 = series.slice(-7);
+  const temps = last7.map((w) => w.tempMaxC).filter((t): t is number => typeof t === "number");
   let dryDays = 0;
   for (let i = series.length - 1; i >= 0 && series[i].precipitationMm < 1; i--) dryDays++;
   return {
     series,
     rain7d: +last7.reduce((s, w) => s + w.precipitationMm, 0).toFixed(1),
-    avgMax7d: last7.length ? +(last7.reduce((s, w) => s + w.tempMaxC, 0) / last7.length).toFixed(1) : undefined,
+    avgMax7d: temps.length ? +(temps.reduce((s, t) => s + t, 0) / temps.length).toFixed(1) : undefined,
     dryDays,
     source: series[0]?.source,
   };

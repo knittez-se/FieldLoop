@@ -21,7 +21,8 @@ export const SOURCE_LABEL: Record<DataSource, string> = {
   farmer_report: "Farmer report",
   adviser: "Adviser entry",
   open_meteo: "Open-Meteo (live)",
-  sentinel2: "Sentinel-2",
+  weather_file: "data/weather.csv",
+  sentinel2: "Sentinel-2 (real)",
 };
 
 export const ANOMALY_TYPE_LABEL: Record<AnomalyType, string> = {
