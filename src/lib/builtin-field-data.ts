@@ -7,7 +7,7 @@
  *  - Saboti: all sorghum dries down before harvest together — correctly NOT flagged
  *  - Kiminini: KIM-04 beans dipped, was treated and RECOVERED (completed inspection in history)
  * Rain stops 12 days before the last reading.
- * Used when Settings → data mode is "Showcase" (default). "Real data" reads data/ instead.
+ * Used when Settings → data mode is "Showcase". "Real data" (the default) reads data/ instead.
  */
 import type { FieldDataPayload } from "./field-data";
 

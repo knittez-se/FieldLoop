@@ -27,7 +27,7 @@ import type {
   WeatherObservation,
 } from "./types";
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 
 const DAY = 24 * 60 * 60 * 1000;
 const DEFAULT_CENTER: LatLng = [1.04, 35.0];
@@ -474,7 +474,7 @@ export function createSeedState(
     weather,
     activity: activity.sort((a, b) => b.at.localeCompare(a.at)),
     queueChanges: [],
-    settings: opts.settings ?? { currentUserId: "adv-grace", liveWeather: false, dataMode: "showcase" },
+    settings: opts.settings ?? { currentUserId: "adv-grace", liveWeather: false, dataMode: "real" },
     profile: opts.profile,
     data: {
       hash: hashPayload(payload),

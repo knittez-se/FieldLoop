@@ -596,7 +596,7 @@ export function syncFieldData(force = false): Promise<FieldSyncResult> {
   if (syncPromise && !force) return syncPromise;
   syncPromise = (async (): Promise<FieldSyncResult> => {
     // Showcase mode never reads data/; the built-in showcase is already loaded.
-    if ((load().settings.dataMode ?? "showcase") === "showcase") {
+    if ((load().settings.dataMode ?? "real") === "showcase") {
       lastSync = { status: "unchanged", origin: "built_in" };
       return lastSync;
     }

@@ -145,7 +145,7 @@ Plan and reasoning: `docs/COMPETITOR_RESEARCH.md` (Part 2). Same split and branc
 
 | Export | File | What B does with it |
 | --- | --- | --- |
-| `settings.dataMode: "showcase" \| "real"`, action `setDataMode(mode)` | `store.ts` | A switch "Showcase data / Real data (Kitale)" in Settings and on the quiz end screen. Showcase is the default. |
+| `settings.dataMode: "showcase" \| "real"`, action `setDataMode(mode)` | `store.ts` | A switch "Showcase data / Real data (Kitale)" in Settings and on the quiz end screen. Real data is the default (team decision, 23 Oct). |
 | `REGIONS`, `CROPS`, `type OnboardingProfile` | `onboarding.ts` | Quiz options. Each region has `center` and `zoom` for the map. |
 | `state.profile` (`OnboardingProfile \| undefined`), actions `completeOnboarding(profile)`, `resetOnboarding()` | `store.ts` | Show the quiz when `state.profile` is undefined. `completeOnboarding` rebuilds the demo for the chosen fields. |
 | `candidateFields(state)` | `onboarding.ts` | All plots the user can pick in quiz step 4 (outline, crop, area). |

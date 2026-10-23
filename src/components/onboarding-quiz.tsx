@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Sprout } from "lucide-react";
 import { completeOnboarding, setDataMode } from "@/lib/store";
@@ -25,7 +25,10 @@ export function OnboardingQuiz({ state }: { state: AppState }) {
   const candidates = useMemo(() => candidateFields(state), [state]);
   const [step, setStep] = useState(0);
   const [p, setP] = useState<OnboardingProfile>({ ...DEFAULT_PROFILE, fieldIds: candidates.map((c) => c.id) });
-  const [mode, setMode] = useState(state.settings.dataMode ?? "showcase");
+  const [mode, setMode] = useState(state.settings.dataMode ?? "real");
+  // Real data loads from data/ after the quiz has opened and replaces the plots; select all of the new ones.
+  const candidateKey = candidates.map((c) => c.id).join();
+  useEffect(() => setP((x) => ({ ...x, fieldIds: candidates.map((c) => c.id) })), [candidateKey]);
   const picked = new Set(p.fieldIds === "all" ? candidates.map((c) => c.id) : p.fieldIds);
   const pickedFields = candidates.filter((c) => picked.has(c.id));
   const hectares = pickedFields.reduce((s, c) => s + c.areaHa, 0);
@@ -39,7 +42,7 @@ export function OnboardingQuiz({ state }: { state: AppState }) {
     setP((x) => ({ ...x, crops, fieldIds: candidates.filter((c) => crops.includes(c.crop)).map((c) => c.id) }));
 
   async function finish(profile: OnboardingProfile) {
-    if (mode !== (state.settings.dataMode ?? "showcase")) {
+    if (mode !== (state.settings.dataMode ?? "real")) {
       await setDataMode(mode);
       // Real data has other plots; keep all of them.
       completeOnboarding({ ...profile, fieldIds: "all" });

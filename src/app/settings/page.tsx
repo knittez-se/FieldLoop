@@ -104,8 +104,8 @@ export default function SettingsPage() {
               <Button
                 key={mode}
                 size="sm"
-                variant={(state.settings.dataMode ?? "showcase") === mode ? "primary" : "secondary"}
-                aria-pressed={(state.settings.dataMode ?? "showcase") === mode}
+                variant={(state.settings.dataMode ?? "real") === mode ? "primary" : "secondary"}
+                aria-pressed={(state.settings.dataMode ?? "real") === mode}
                 onClick={() => setDataMode(mode)}
               >
                 {label}
