@@ -7,7 +7,8 @@
  *   ownChange    = (last reading − baseline) / baseline                 → compares the field to its own past
  *   neighborChg  = median ownChange of all OTHER evaluated fields       → what "normal" looks like right now
  *   relative     = ownChange − neighborChg                              → compares the field to its neighbors
- *   drops        = number of consecutive declines (> 0.005) at the end
+ *   drops        = number of consecutive declines larger than 0.015 at the end
+ *                  (smaller wobble is normal noise in real NDVI data)
  *
  *   severity high   : relative ≤ −15% with ≥ 2 consecutive drops,
  *                     or relative ≤ −10% with ≥ 3 consecutive drops
@@ -55,6 +56,8 @@ export interface DetectionSkip {
 export const MIN_READINGS = 4;
 export const MAX_STALE_DAYS = 10;
 export const MAX_GAP_DAYS = 21;
+/** Minimum week-to-week decrease that counts as a "drop". */
+export const DROP_STEP = 0.015;
 const DAY = 86_400_000;
 
 const mean = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
@@ -83,7 +86,7 @@ function ownChange(field: FieldInput): OwnChange | null {
   const baseline = mean(before.length ? before : [r[0].greenness]);
   if (baseline <= 0.05) return null; // bare soil / no crop — a ratio is meaningless
   let drops = 0;
-  for (let i = r.length - 1; i > 0 && r[i].greenness < r[i - 1].greenness - 0.005; i--) drops++;
+  for (let i = r.length - 1; i > 0 && r[i].greenness < r[i - 1].greenness - DROP_STEP; i--) drops++;
   let maxGapDays = 0;
   for (let i = windowStart + 1; i < r.length; i++) maxGapDays = Math.max(maxGapDays, days(r[i - 1].date, r[i].date));
   return { baseline, last, change: (last - baseline) / baseline, drops, maxGapDays };
