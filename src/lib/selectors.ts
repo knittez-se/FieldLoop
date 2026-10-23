@@ -183,3 +183,77 @@ export function lastQueueChange(state: AppState, id?: string): QueueChangeView |
         : `Ground report for ${causeName} changed the ranking — ${topText}.`;
   return { id: change.id, at: change.at, cause: change.cause, fieldId: change.fieldId, inspectionId: change.inspectionId, headline, moves };
 }
+
+// ---------------------------------------------------------------------------
+// Round 2: Today briefing, capacity, impact, time-lapse
+
+/** One sentence for the top of "Today" plus the inspection to open. */
+export function todayBriefing(state: AppState, now = new Date()): { headline: string; detail: string; inspectionId?: string } {
+  const queue = activeInspections(state, now);
+  const total = state.fields.length;
+  const fieldsNeeding = new Set(queue.map((r) => r.task.fieldId)).size;
+  if (queue.length === 0) {
+    return { headline: `All ${total} fields look normal this week.`, detail: "No visits needed. FarmSignal keeps watching the satellite data." };
+  }
+  const top = queue[0];
+  const anomaly = state.anomalies.find((a) => top.task.anomalyIds.includes(a.id));
+  const why = anomaly?.observed ?? top.task.reason;
+  const farmerReport = state.observations.some((o) => o.inspectionId === top.task.id && o.authorRole === "farmer");
+  return {
+    headline: `${fieldsNeeding} of ${total} fields need a visit. Start with ${top.field?.name ?? top.task.fieldId}.`,
+    detail: `${why.split(/(?<=\.)\s/)[0]}${farmerReport ? " The farmer also reported a problem." : ""}`,
+    inspectionId: top.task.id,
+  };
+}
+
+/** Do this week's visits fit the team? Uses the quiz answers, or 2 advisers × 5 visits/day. */
+export function weeklyCapacity(state: AppState, now = new Date()) {
+  const visitsNeeded = activeInspections(state, now).length;
+  const advisers = Math.max(1, state.profile?.advisers ?? 2);
+  const visitsPerAdviserDay = Math.max(1, state.profile?.visitsPerAdviserDay ?? 5);
+  const adviserDays = Math.ceil(visitsNeeded / visitsPerAdviserDay);
+  return { visitsNeeded, advisers, visitsPerAdviserDay, adviserDays, fits: adviserDays <= advisers * 5 };
+}
+
+/** Headline numbers for the pitch: how many trips the ranking saves. */
+export function impactSummary(state: AppState, now = new Date()) {
+  const fieldsMonitored = state.fields.length;
+  const needVisit = new Set(activeInspections(state, now).map((r) => r.task.fieldId)).size;
+  return {
+    fieldsMonitored,
+    hectares: +state.fields.reduce((s, f) => s + f.areaHa, 0).toFixed(1),
+    needVisit,
+    visitsAvoidedPct: fieldsMonitored ? Math.round((1 - needVisit / fieldsMonitored) * 100) : 0,
+    casesClosed30d: state.reports.filter((r) => (daysBetween(r.createdAt, now) ?? 99) <= 30).length,
+  };
+}
+
+/**
+ * Weekly greenness per field for the map time-lapse.
+ * Readings are bucketed into 7-day steps ending at the newest reading; a field without a reading
+ * in a week keeps its previous value (clouds), or null before its first reading.
+ */
+export function greennessTimeline(state: AppState) {
+  const all = state.fields.flatMap((f) => f.vegetationIndex.series.map((r) => r.date)).sort();
+  if (all.length === 0) return { weeks: [] as string[], byField: {} as Record<string, Array<{ value: number | null; simulated: boolean }>> };
+  const DAY = 86_400_000;
+  const first = new Date(all[0]).getTime();
+  const last = new Date(all[all.length - 1]).getTime();
+  const weeks: string[] = [];
+  for (let t = last; t >= first - 6 * DAY; t -= 7 * DAY) weeks.unshift(new Date(t).toISOString().slice(0, 10));
+  const byField: Record<string, Array<{ value: number | null; simulated: boolean }>> = {};
+  state.fields.forEach((f) => {
+    let prev: { value: number | null; simulated: boolean } = { value: null, simulated: false };
+    byField[f.id] = weeks.map((w) => {
+      const end = new Date(w).getTime();
+      const inWeek = f.vegetationIndex.series.filter((r) => {
+        const t = new Date(r.date).getTime();
+        return t <= end && t > end - 7 * DAY;
+      });
+      const r = inWeek[inWeek.length - 1];
+      if (r) prev = { value: r.value, simulated: r.source !== "real" };
+      return prev;
+    });
+  });
+  return { weeks, byField };
+}

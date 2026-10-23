@@ -29,6 +29,7 @@ import type {
   InspectionReport,
   InspectionTask,
   ObservationCategory,
+  OnboardingProfile,
   QueueChange,
   QueueEntry,
 } from "./types";
@@ -543,12 +544,33 @@ export function updateSettings(patch: Partial<AppSettings>) {
 }
 
 /** Rebuilds the demo from the current field data (keeps the data source, drops all user changes). */
-export function resetDemoData() {
-  const payload = load().data.payload;
-  const keepSettings = load().settings;
-  state = { ...createSeedState(payload), settings: keepSettings };
+/** Rebuilds the state from a payload, keeping settings and the onboarding profile. */
+function rebuild(payload: FieldDataPayload, profile = load().profile) {
+  const current = load();
+  state = createSeedState(payload, new Date(), { profile, settings: current.settings });
   persist(state);
   emit();
+}
+
+export function resetDemoData() {
+  rebuild(load().data.payload);
+}
+
+/** Switch between the built-in showcase data and the real files in data/. */
+export async function setDataMode(mode: AppState["settings"]["dataMode"]) {
+  updateSettings({ dataMode: mode });
+  if (mode === "showcase") rebuild(BUILTIN_FIELD_DATA);
+  else await syncFieldData(true);
+}
+
+/** Saves the quiz answers and rebuilds the demo for the picked fields. */
+export function completeOnboarding(profile: OnboardingProfile) {
+  rebuild(load().data.payload, profile);
+}
+
+/** Shows the quiz again (keeps the data). */
+export function resetOnboarding() {
+  rebuild(load().data.payload, undefined);
 }
 
 let syncPromise: Promise<FieldSyncResult> | null = null;
@@ -572,6 +594,11 @@ export function getLastFieldSync() {
 export function syncFieldData(force = false): Promise<FieldSyncResult> {
   if (syncPromise && !force) return syncPromise;
   syncPromise = (async (): Promise<FieldSyncResult> => {
+    // Showcase mode never reads data/; the built-in showcase is already loaded.
+    if ((load().settings.dataMode ?? "showcase") === "showcase") {
+      lastSync = { status: "unchanged", origin: "built_in" };
+      return lastSync;
+    }
     try {
       const res = await fetch("/api/field-data", { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -583,8 +610,7 @@ export function syncFieldData(force = false): Promise<FieldSyncResult> {
       } else if (payload.fields.length === 0) {
         lastSync = { status: "unavailable", message: "Data files contain no usable fields. " + payload.warnings.join(" ") };
       } else {
-        state = { ...createSeedState(payload), settings: current.settings };
-        persist(state);
+        rebuild(payload);
         lastSync = {
           status: "rebuilt",
           origin: payload.origin,

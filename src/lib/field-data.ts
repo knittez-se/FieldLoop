@@ -20,7 +20,10 @@ export interface FieldInput {
   id: string;
   name?: string;
   farm?: string;
+  crop?: string;
   growthStage?: string;
+  /** Showcase only: which demo story the field plays ("in_progress" | "no_issue" | "recovered"). */
+  scenario?: string;
   /** [lat, lng] pairs. Empty if the field has no outline in fields.geojson. */
   boundary: LatLng[];
   readings: Reading[];
@@ -133,8 +136,8 @@ interface GeoFeature {
 export function parseFieldsGeojson(
   text: string,
   warnings: string[],
-): Map<string, { boundary: LatLng[]; name?: string; farm?: string; growthStage?: string }> {
-  const result = new Map<string, { boundary: LatLng[]; name?: string; farm?: string; growthStage?: string }>();
+): Map<string, { boundary: LatLng[]; name?: string; farm?: string; crop?: string; growthStage?: string }> {
+  const result = new Map<string, { boundary: LatLng[]; name?: string; farm?: string; crop?: string; growthStage?: string }>();
   let json: { features?: GeoFeature[] };
   try {
     json = JSON.parse(text);
@@ -164,6 +167,7 @@ export function parseFieldsGeojson(
       boundary: coords.length >= 3 ? coords : [],
       name: str(props.name),
       farm: str(props.farm) ?? str(props.farm_name),
+      crop: str(props.crop)?.toLowerCase(),
       growthStage: str(props.growth_stage),
     });
   });

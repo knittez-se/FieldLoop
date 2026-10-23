@@ -5,7 +5,9 @@
  *
  *   baseline     = mean of the 3 readings before the last 3 readings
  *   ownChange    = (last reading − baseline) / baseline                 → compares the field to its own past
- *   neighborChg  = median ownChange of all OTHER evaluated fields       → what "normal" looks like right now
+ *   neighborChg  = median ownChange of the OTHER fields with the same crop (all other fields if
+ *                  fewer than 3 share the crop) → what "normal" looks like right now. Same-crop matters:
+ *                  a crop drying down before harvest falls together and must not be flagged.
  *   relative     = ownChange − neighborChg                              → compares the field to its neighbors
  *   drops        = number of consecutive declines larger than 0.015 at the end
  *                  (smaller wobble is normal noise in real NDVI data)
@@ -143,7 +145,10 @@ export function detectChanges(fields: FieldInput[], weather: RainfallRow[]): Det
   fields.forEach((f) => {
     const c = changes.get(f.id);
     if (!c) return;
-    const others = [...changes.entries()].filter(([id]) => id !== f.id).map(([, v]) => v.change);
+    const cropOf = (id: string) => fields.find((x) => x.id === id)?.crop ?? "unknown";
+    const all = [...changes.entries()].filter(([id]) => id !== f.id);
+    const sameCrop = all.filter(([id]) => cropOf(id) === (f.crop ?? "unknown"));
+    const others = (sameCrop.length >= 3 ? sameCrop : all).map(([, v]) => v.change);
     const neighbor = median(others);
     const relative = c.change - neighbor;
 

@@ -14,6 +14,7 @@
 import { detectChanges, detectionSkips, type Detection } from "./detection";
 import { hashPayload, type FieldDataPayload, type FieldInput } from "./field-data";
 import type {
+  OnboardingProfile,
   ActivityEvent,
   Anomaly,
   AppState,
@@ -26,7 +27,7 @@ import type {
   WeatherObservation,
 } from "./types";
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 
 const DAY = 24 * 60 * 60 * 1000;
 const DEFAULT_CENTER: LatLng = [1.04, 35.0];
@@ -39,14 +40,14 @@ function isoDaysAgo(now: Date, days: number, hour = 9): string {
 
 // --- geometry helpers ------------------------------------------------------
 
-function centroidOf(ring: LatLng[]): LatLng {
+export function centroidOf(ring: LatLng[]): LatLng {
   const lat = ring.reduce((s, p) => s + p[0], 0) / ring.length;
   const lng = ring.reduce((s, p) => s + p[1], 0) / ring.length;
   return [+lat.toFixed(6), +lng.toFixed(6)];
 }
 
 /** Approximate polygon area in hectares (equirectangular projection — fine for small fields). */
-function areaHa(ring: LatLng[]): number {
+export function areaHa(ring: LatLng[]): number {
   if (ring.length < 3) return 0;
   const lat0 = (centroidOf(ring)[0] * Math.PI) / 180;
   const pts = ring.map(([lat, lng]) => [lng * 111_320 * Math.cos(lat0), lat * 111_320]);
@@ -131,7 +132,11 @@ function anomalyFromDetection(d: Detection, id: string, field: Field, now: Date)
 
 // --- main builder ----------------------------------------------------------
 
-export function createSeedState(payload: FieldDataPayload, now: Date = new Date()): AppState {
+export function createSeedState(
+  payload: FieldDataPayload,
+  now: Date = new Date(),
+  opts: { profile?: OnboardingProfile; settings?: AppState["settings"] } = {},
+): AppState {
   const fromFiles = payload.origin === "data_files";
 
   const advisers: AppState["advisers"] = [
@@ -142,7 +147,11 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
   const farmerNames = ["Joseph Kiprono", "Mary Nafula", "Samuel Wekesa", "Esther Akinyi"];
 
   // Fields with an outline + at least one reading. Missing outlines get a placeholder square.
-  const inputs: FieldInput[] = payload.fields.filter((f) => f.readings.length > 0);
+  const withReadings: FieldInput[] = payload.fields.filter((f) => f.readings.length > 0);
+  // Fields picked in the onboarding quiz (falls back to all if none of them exist in this data).
+  const picked = opts.profile && opts.profile.fieldIds !== "all" ? new Set(opts.profile.fieldIds) : null;
+  const pickedInputs = picked ? withReadings.filter((f) => picked.has(f.id)) : [];
+  const inputs = pickedInputs.length ? pickedInputs : withReadings;
   const withShape = inputs.filter((f) => f.boundary.length >= 3);
   const center: LatLng = withShape.length
     ? centroidOf(withShape.map((f) => centroidOf(f.boundary)))
@@ -172,7 +181,7 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
       id: f.id,
       farmId: farmIdFor(f),
       name: f.name ?? `Field ${f.id}`,
-      crop: "maize",
+      crop: f.crop ?? "maize", // shortcut: data without a crop is assumed maize (the demo crop)
       growthStage: f.growthStage ?? "Not recorded",
       areaHa: areaHa(boundary),
       centroid: centroidOf(boundary),
@@ -273,7 +282,13 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
   }
 
   // Scenario: in-progress inspection from a ground report (first healthy field)
-  const [h1, h2, h3] = healthy;
+  // Showcase data names the field for each story; otherwise take the first unflagged fields.
+  const byScenario = (sc: string) => healthy.find((f) => inputs.find((i) => i.id === f.id)?.scenario === sc);
+  const rest = healthy.filter((f) => !["in_progress", "no_issue", "recovered"].includes(inputs.find((i) => i.id === f.id)?.scenario ?? ""));
+  const h1 = byScenario("in_progress") ?? rest.shift();
+  const h2 = byScenario("no_issue") ?? rest.shift();
+  const h3 = byScenario("recovered");
+  const h3Fallback = h3 ? undefined : rest.shift();
   if (h1) {
     anomalies.push({
       id: "ANM-2038",
@@ -413,8 +428,17 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
     "The patch is dominated by weeds (couch grass). Maize plants there are healthy in color and stand.",
     "Schedule weeding of the patch. No crop-health follow-up needed.",
   );
+  if (h3) {
+    completed(
+      h3, 32, "INS-1298", "RPT-0899", "ANM-2017", "adv-grace", "issue_confirmed",
+      "Verify yellowing and curled leaves",
+      "Farmer reported yellowing, curled leaves on part of the plot.",
+      "Dense aphid colonies on the underside of leaves on about a third of the plot; no virus symptoms seen.",
+      "Farmer applied the cooperative's recommended treatment. Re-check greenness in 3 weeks.",
+    );
+  }
   completed(
-    h3, 9, "INS-1298", "RPT-0899", "ANM-2017", "adv-grace", "issue_confirmed",
+    h3Fallback, 9, "INS-1298", "RPT-0899", "ANM-2017", "adv-grace", "issue_confirmed",
     "Verify reported leaf damage",
     "Farmer reported ragged holes in young leaves and sawdust-like residue in the whorls.",
     "Larvae and fresh whorl feeding damage found on 6 of 50 scouted plants (12%), concentrated on one side of the field.",
@@ -450,7 +474,8 @@ export function createSeedState(payload: FieldDataPayload, now: Date = new Date(
     weather,
     activity: activity.sort((a, b) => b.at.localeCompare(a.at)),
     queueChanges: [],
-    settings: { currentUserId: "adv-grace", liveWeather: false },
+    settings: opts.settings ?? { currentUserId: "adv-grace", liveWeather: false, dataMode: "showcase" },
+    profile: opts.profile,
     data: {
       hash: hashPayload(payload),
       origin: payload.origin,

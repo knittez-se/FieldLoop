@@ -10,7 +10,7 @@ import { scoreInspection, levelForScore } from "../src/lib/priority";
 import { analyzeReportDemo, type ReportInput } from "../src/lib/agent/report";
 import { createSeedState } from "../src/lib/demo-data";
 import { BUILTIN_FIELD_DATA } from "../src/lib/builtin-field-data";
-import { activeInspections, dashboardStats, lastQueueChange } from "../src/lib/selectors";
+import { activeInspections, dashboardStats, greennessTimeline, impactSummary, lastQueueChange, todayBriefing, weeklyCapacity } from "../src/lib/selectors";
 
 const weeks = (n: number, end = "2026-10-19") =>
   Array.from({ length: n }, (_, i) => new Date(new Date(end).getTime() - (n - 1 - i) * 7 * 86_400_000).toISOString().slice(0, 10));
@@ -73,9 +73,14 @@ test("normal week-to-week wobble (±0.01) is not counted as a drop", () => {
   assert.equal(d[0].consecutiveDrops, 2);
 });
 
-test("built-in sample flags exactly the two planted problem fields", () => {
+test("showcase data tells its four stories", () => {
   const d = detectChanges(BUILTIN_FIELD_DATA.fields, BUILTIN_FIELD_DATA.weather);
-  assert.deepEqual(d.map((x) => [x.fieldId, x.severity]), [["FS-104", "high"], ["FS-112", "medium"]]);
+  const crop = (id: string) => BUILTIN_FIELD_DATA.fields.find((f) => f.id === id)?.crop;
+  assert.deepEqual(d[0].fieldId, "KAP-08"); // spreading problem, origin
+  assert.equal(d[0].severity, "high");
+  for (const id of ["KAP-07", "KAP-09", "SAB-01", "SAB-02", "SAB-06", "SAB-07"]) assert.ok(d.some((x) => x.fieldId === id), id);
+  assert.ok(!d.some((x) => crop(x.fieldId) === "sorghum"), "harvest dry-down must not be flagged");
+  assert.ok(!d.some((x) => x.fieldId === "KIM-04"), "recovered field must not be flagged");
 });
 
 // --- parsers ---------------------------------------------------------------
@@ -126,12 +131,12 @@ test("priority levels follow the documented thresholds", () => {
 test("seed state puts the high-severity field with a farmer report at #1", () => {
   const s = createSeedState(BUILTIN_FIELD_DATA, new Date("2026-10-23T12:00:00Z"));
   const q = activeInspections(s, new Date("2026-10-23T12:00:00Z"));
-  assert.equal(q[0].task.fieldId, "FS-104");
+  assert.equal(q[0].task.fieldId, "KAP-08");
   assert.equal(q[0].priority.level, "high");
   const p = scoreInspection(q[0].task, s, new Date("2026-10-23T12:00:00Z"));
   assert.ok(p.factors.some((f) => /Fresh ground report/.test(f.label)));
   const stats = dashboardStats(s, new Date("2026-10-23T12:00:00Z"));
-  assert.equal(stats.totalFields, 8);
+  assert.equal(stats.totalFields, 40);
   assert.equal(stats.highPriorityAlerts, 1);
   assert.equal(lastQueueChange(s), null);
 });
@@ -205,4 +210,35 @@ test("data/ files follow the contract and flag only the planted problem field", 
   assert.equal(flagged[0].severity, "high");
   // the flagged field must contain the planted (simulated) readings, so the app labels it
   assert.equal(flagged[0].allReal, false);
+});
+
+// --- round 2: onboarding, briefing, capacity, time-lapse ----------------------
+
+test("onboarding profile limits the demo to the picked fields", () => {
+  const now = new Date("2026-10-23T12:00:00Z");
+  const profile = { role: "adviser" as const, regionId: "ke-trans-nzoia", crops: ["maize"], fieldIds: ["KAP-07", "KAP-08", "KAP-09", "KAP-01", "KAP-02"], advisers: 1, visitsPerAdviserDay: 2 };
+  const s = createSeedState(BUILTIN_FIELD_DATA, now, { profile });
+  assert.equal(s.fields.length, 5);
+  assert.equal(s.profile?.advisers, 1);
+  assert.equal(activeInspections(s, now)[0].task.fieldId, "KAP-08");
+  const cap = weeklyCapacity(s, now);
+  assert.equal(cap.adviserDays, Math.ceil(cap.visitsNeeded / 2));
+  // unknown ids (e.g. after switching data) fall back to all fields
+  const s2 = createSeedState(BUILTIN_FIELD_DATA, now, { profile: { ...profile, fieldIds: ["F1"] } });
+  assert.equal(s2.fields.length, 40);
+});
+
+test("briefing, impact and timeline are derived from the data", () => {
+  const now = new Date("2026-10-23T12:00:00Z");
+  const s = createSeedState(BUILTIN_FIELD_DATA, now);
+  const b = todayBriefing(s, now);
+  assert.match(b.headline, /^\d+ of 40 fields need a visit\. Start with /);
+  assert.ok(b.inspectionId);
+  const imp = impactSummary(s, now);
+  assert.equal(imp.fieldsMonitored, 40);
+  assert.equal(imp.visitsAvoidedPct, Math.round((1 - imp.needVisit / 40) * 100));
+  const t = greennessTimeline(s);
+  assert.equal(t.weeks.length, 10);
+  const kap08 = t.byField["KAP-08"].map((x) => x.value as number);
+  assert.ok(kap08[9] < kap08[5] - 0.1, "the spreading problem is visible in the time-lapse");
 });

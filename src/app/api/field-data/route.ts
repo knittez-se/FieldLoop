@@ -60,6 +60,7 @@ export async function GET() {
         id,
         name: shape?.name,
         farm: shape?.farm,
+        crop: shape?.crop,
         growthStage: shape?.growthStage,
         boundary: shape?.boundary ?? [],
         readings: scores.get(id) ?? [],

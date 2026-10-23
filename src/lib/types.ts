@@ -47,7 +47,7 @@ export interface Field {
   id: string; // e.g. "FS-104"
   farmId: string;
   name: string;
-  crop: "maize";
+  crop: string; // e.g. "maize", "beans"
   variety?: string;
   growthStage: string;
   areaHa: number;
@@ -224,9 +224,21 @@ export interface QueueChange {
   after: QueueEntry[];
 }
 
+export interface OnboardingProfile {
+  role: "farmer" | "adviser" | "ngo";
+  regionId: string;
+  crops: string[];
+  /** Field ids the user picked in the quiz; "all" = every field in the data. */
+  fieldIds: string[] | "all";
+  advisers: number;
+  visitsPerAdviserDay: number;
+}
+
 export interface AppSettings {
   currentUserId: string;
   liveWeather: boolean;
+  /** "showcase" = built-in simulated showcase data, "real" = files in data/ */
+  dataMode: "showcase" | "real";
 }
 
 export interface AppState {
@@ -253,4 +265,6 @@ export interface AppState {
   /** Latest first, max 20. */
   queueChanges: QueueChange[];
   settings: AppSettings;
+  /** Answers from the onboarding quiz; undefined = quiz not done yet. */
+  profile?: OnboardingProfile;
 }
