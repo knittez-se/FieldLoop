@@ -35,7 +35,7 @@ function getRecognitionCtor(): SpeechRecognitionCtor | null {
  * Browser speech recognition (Chrome/Edge/Safari). Appends recognized text via `onText`.
  * If unsupported, says so — it never pretends a recording was transcribed.
  */
-export function VoiceInput({ onText, lang = "en-US" }: { onText: (text: string) => void; lang?: string }) {
+export function VoiceInput({ onText, lang = "en-US", size = "sm" }: { onText: (text: string) => void; lang?: string; size?: "sm" | "md" }) {
   const [supported, setSupported] = useState<boolean | null>(null);
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
@@ -93,11 +93,11 @@ export function VoiceInput({ onText, lang = "en-US" }: { onText: (text: string) 
   return (
     <div className="flex flex-wrap items-center gap-2">
       {listening ? (
-        <Button variant="danger" size="sm" icon={Square} onClick={stop}>
+        <Button variant="danger" size={size} className={size === "md" ? "min-h-11" : undefined} icon={Square} onClick={stop}>
           Stop dictation
         </Button>
       ) : (
-        <Button variant="secondary" size="sm" icon={Mic} onClick={start}>
+        <Button variant="secondary" size={size} className={size === "md" ? "min-h-11" : undefined} icon={Mic} onClick={start}>
           Dictate
         </Button>
       )}

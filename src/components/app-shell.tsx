@@ -116,6 +116,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             Signed in as <span className="font-medium text-white">{user.name}</span>
           </div>
         )}
+        <Link href="/settings#reset-demo" className="inline-block font-medium text-brand-100 underline-offset-2 hover:underline">
+          Reset demo
+        </Link>
       </div>
     </>
   );
@@ -123,7 +126,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen lg:flex">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-brand-900 p-3 lg:flex">{sidebarBody}</aside>
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto bg-brand-900 p-3 lg:flex">{sidebarBody}</aside>
 
       {/* Mobile top bar */}
       <header className="sticky top-0 z-[1100] flex items-center justify-between border-b border-stone-200 bg-white/95 px-4 py-2.5 backdrop-blur lg:hidden">
@@ -147,7 +150,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {open && (
         <div className="fixed inset-0 z-[1200] lg:hidden" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-brand-900 p-3">
+          <div className="absolute inset-y-0 left-0 flex w-72 flex-col overflow-y-auto bg-brand-900 p-3">
             <button
               type="button"
               onClick={() => setOpen(false)}

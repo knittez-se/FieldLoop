@@ -6,8 +6,12 @@ import { INSPECTION_STATUS_LABEL } from "@/lib/labels";
 
 type IconType = ComponentType<{ className?: string }>;
 
-export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("rounded-xl border border-stone-200 bg-white shadow-sm", className)}>{children}</div>;
+export function Card({ className, children, id }: { className?: string; children: ReactNode; id?: string }) {
+  return (
+    <div id={id} className={cn("rounded-xl border border-stone-200 bg-white shadow-sm", className)}>
+      {children}
+    </div>
+  );
 }
 
 export function CardHeader({

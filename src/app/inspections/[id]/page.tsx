@@ -116,9 +116,14 @@ export default function InspectionPage() {
           <div className="flex flex-wrap items-center gap-2">
             {!completed && <PriorityBadge level={priority.level} score={priority.score} />}
             <StatusBadge status={task.status} />
+            {!completed && (
+              <Button href={`/inspections/${task.id}/visit`} icon={Play}>
+                {inProgress ? "Continue visit" : "Open visit"}
+              </Button>
+            )}
             {isOpen && (
-              <Button icon={Play} onClick={() => startInspection(task.id)}>
-                Start inspection
+              <Button variant="secondary" icon={Play} onClick={() => startInspection(task.id)}>
+                Start here
               </Button>
             )}
           </div>

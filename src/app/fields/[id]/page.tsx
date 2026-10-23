@@ -9,7 +9,7 @@ import { formatDate, relativeTime } from "@/lib/format";
 import { ANOMALY_STATUS_LABEL, ANOMALY_TYPE_LABEL, CATEGORY_LABEL, OUTCOME_LABEL, SOURCE_LABEL } from "@/lib/labels";
 import type { ReactNode } from "react";
 import type { Anomaly } from "@/lib/types";
-import { ActivityFeed } from "@/components/activity-feed";
+import { CaseTimeline } from "@/components/case-timeline";
 import { FieldAgent } from "@/components/field-agent";
 import { TrendChart } from "@/components/trend-chart";
 import { WeatherCard } from "@/components/weather-card";
@@ -67,8 +67,8 @@ export default function FieldPage() {
               Add observation
             </Button>
             {status.task && (
-              <Button href={`/inspections/${status.task.id}`} icon={ClipboardList}>
-                {status.task.status === "in_progress" ? "Continue inspection" : "Open inspection"}
+              <Button href={`/inspections/${status.task.id}/visit`} icon={ClipboardList}>
+                {status.task.status === "in_progress" ? "Continue visit" : "Start visit"}
               </Button>
             )}
           </>
@@ -90,6 +90,15 @@ export default function FieldPage() {
           </div>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader
+          icon={ClipboardList}
+          title="Case history"
+          description="Signal, visit, notes, and what was confirmed on site. Oldest first."
+        />
+        <CaseTimeline state={state} fieldId={field.id} />
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -220,10 +229,6 @@ export default function FieldPage() {
         <div className="space-y-6">
           <FieldAgent state={state} fieldId={field.id} />
           <WeatherCard location={field.centroid} sample={state.weather} live={state.settings.liveWeather} />
-          <Card>
-            <CardHeader title="Recent activity" />
-            <ActivityFeed events={state.activity.filter((e) => e.fieldId === field.id)} fields={state.fields} showField={false} limit={6} />
-          </Card>
           {status.task && (
             <Card className="p-4">
               <div className="text-xs font-medium text-stone-500">Active inspection</div>

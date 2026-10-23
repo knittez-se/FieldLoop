@@ -46,8 +46,11 @@ export function SchematicMap({
           const [cx, cy] = project(f.centroid);
           return (
             <g key={f.id} className="cursor-pointer" onClick={() => onSelect?.(f.id)}>
-              <path d={d} fill={color} fillOpacity={f.id === selectedId ? 0.4 : 0.22} stroke={f.id === selectedId ? "#111827" : color} strokeWidth={f.id === selectedId ? 4 : 2} />
-              <text x={cx} y={cy + 30} textAnchor="middle" fontSize="18" fill="#374151">
+              <path d={d} fill={color} fillOpacity={f.id === selectedId ? 0.45 : 0.28} stroke={f.id === selectedId ? "#111827" : color} strokeWidth={f.id === selectedId ? 6 : 2} />
+              <text x={cx} y={cy} textAnchor="middle" fontSize="20" fontWeight="700" fill="#1c1f1d">
+                {f.name}
+              </text>
+              <text x={cx} y={cy + 24} textAnchor="middle" fontSize="14" fill="#57534e">
                 {f.id}
               </text>
               {st.hasActiveInspection && <circle cx={cx} cy={cy} r={11} fill={color} stroke="white" strokeWidth={3} />}
