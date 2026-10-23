@@ -101,12 +101,15 @@ export function FieldMap(props: FieldMapProps) {
       const selected = field.id === selectedId;
       const poly = L.polygon(field.boundary, {
         color: selected ? "#111827" : color,
-        weight: selected ? 3 : 2,
+        weight: selected ? 4 : 2,
         fillColor: color,
-        fillOpacity: selected ? 0.35 : 0.22,
-      })
-        .bindTooltip(`<strong>${field.name}</strong><br/>${field.id} · ${field.areaHa} ha`, { sticky: true })
-        .on("click", () => onSelectRef.current?.(field.id));
+        fillOpacity: selected ? 0.45 : 0.28,
+      }).on("click", () => onSelectRef.current?.(field.id));
+      if (compact) {
+        poly.bindTooltip(`<strong>${field.name}</strong><br/>${field.id} · ${field.areaHa} ha`, { sticky: true });
+      } else {
+        poly.bindTooltip(field.name, { permanent: true, direction: "center", className: "fs-field-label", opacity: 1 });
+      }
       group.addLayer(poly);
 
       if (st.hasActiveInspection) {

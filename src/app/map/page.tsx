@@ -35,8 +35,8 @@ export default function MapPage() {
         actions={
           <DemoNotice>
             {state.data.origin === "data_files"
-              ? "Field outlines from data/fields.geojson."
-              : "Built-in sample: demo coordinates in Trans-Nzoia, Kenya; outlines are generated, not surveyed."}
+              ? "Outlines from data/fields.geojson. Not a satellite image."
+              : "Built-in sample outlines in Trans-Nzoia, Kenya. Not a satellite image."}
           </DemoNotice>
         }
       />
@@ -148,14 +148,14 @@ export default function MapPage() {
             <p className="text-xs text-stone-500">No open signals for this field.</p>
           )}
           <div className="flex flex-wrap gap-2 pt-1">
-            <Button size="sm" href={`/fields/${field.id}`}>
-              Field details <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
             {st.task && (
-              <Button size="sm" variant="secondary" href={`/inspections/${st.task.id}`}>
-                Open inspection
+              <Button size="sm" href={`/inspections/${st.task.id}/visit`}>
+                {st.task.status === "in_progress" ? "Continue visit" : "Start visit"}
               </Button>
             )}
+            <Button size="sm" variant="secondary" href={`/fields/${field.id}`}>
+              Field details <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
           </div>
           <div className="text-[11px] text-stone-400">
             <Link href={`/reports/new?field=${field.id}`} className="hover:underline">

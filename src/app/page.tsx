@@ -19,6 +19,8 @@ import { relativeTime } from "@/lib/format";
 import { OUTCOME_LABEL, CATEGORY_LABEL } from "@/lib/labels";
 import { ActivityFeed } from "@/components/activity-feed";
 import { FieldMap, MapLegend } from "@/components/field-map";
+import { QueueShiftBanner } from "@/components/queue-shift";
+import { latestQueueShift } from "@/lib/ui-queue";
 import {
   Badge,
   Button,
@@ -49,6 +51,8 @@ export default function OverviewPage() {
   const { stats, queue, status } = derived;
   const top = queue[0];
   const user = state.advisers.find((a) => a.id === state.settings.currentUserId);
+  const shift = latestQueueShift(state);
+  const promotedTaskId = shift?.nowFirst && shift.nowFirst.fieldId !== shift.completedFieldId ? shift.nowFirst.taskId : undefined;
 
   const recentReports = [
     ...state.reports.map((r) => ({
@@ -86,10 +90,15 @@ export default function OverviewPage() {
             <Button variant="secondary" href="/map" icon={MapIcon}>
               Open map
             </Button>
+            <Button variant="secondary" href="/settings#reset-demo">
+              Reset demo
+            </Button>
             <Button href="/reports/new">Report observation</Button>
           </>
         }
       />
+
+      <QueueShiftBanner state={state} />
 
       {/* Next action */}
       {top ? (
@@ -115,9 +124,14 @@ export default function OverviewPage() {
                 </div>
               </div>
             </div>
-            <Button href={`/inspections/${top.task.id}`} className="shrink-0">
-              {top.task.status === "in_progress" ? "Continue inspection" : "Open inspection"} <ArrowRight className="h-4 w-4" />
-            </Button>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Button href={`/inspections/${top.task.id}/visit`} className="min-h-11">
+                {top.task.status === "in_progress" ? "Continue visit" : "Start visit"} <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button variant="secondary" href={`/inspections/${top.task.id}`}>
+                Details
+              </Button>
+            </div>
           </div>
         </Card>
       ) : (
@@ -178,11 +192,15 @@ export default function OverviewPage() {
             <ul className="divide-y divide-stone-100">
               {queue.slice(0, 5).map((r, i) => (
                 <li key={r.task.id}>
-                  <Link href={`/inspections/${r.task.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 sm:px-5">
+                  <Link
+                    href={`/inspections/${r.task.id}/visit`}
+                    className={`flex items-center gap-3 px-4 py-3 hover:bg-stone-50 sm:px-5 ${r.task.id === promotedTaskId ? "bg-amber-50" : ""}`}
+                  >
                     <span className="w-5 text-center text-sm font-semibold tabular-nums text-stone-400">{i + 1}</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="truncate text-sm font-medium text-stone-900">{r.field?.name}</span>
+                        {r.task.id === promotedTaskId && <span className="text-[11px] font-semibold text-amber-800">Now first</span>}
                         <PriorityBadge level={r.priority.level} score={r.priority.score} />
                         <StatusBadge status={r.task.status} />
                       </div>
@@ -201,7 +219,11 @@ export default function OverviewPage() {
           <CardHeader
             icon={MapIcon}
             title="Map preview"
-            description="Demo coordinates & generated boundaries"
+            description={
+              state.data.origin === "data_files"
+                ? "Outlines from data/fields.geojson · simulated, not a satellite image"
+                : "Built-in sample outlines · not a satellite image"
+            }
             action={
               <Link href="/map" className="text-xs font-medium text-brand-700 hover:underline">
                 Full map

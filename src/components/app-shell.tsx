@@ -116,6 +116,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             Signed in as <span className="font-medium text-white">{user.name}</span>
           </div>
         )}
+        <Link href="/settings#reset-demo" className="inline-block font-medium text-brand-100 underline-offset-2 hover:underline">
+          Reset demo
+        </Link>
       </div>
     </>
   );

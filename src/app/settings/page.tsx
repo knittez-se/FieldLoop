@@ -144,7 +144,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <Card>
+      <Card id="reset-demo">
         <CardHeader icon={Database} title="Storage & demo data" />
         <div className="space-y-3 p-4 text-sm sm:p-5">
           <p className="text-stone-600">

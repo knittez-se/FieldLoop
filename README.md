@@ -28,13 +28,15 @@ FarmSignal never claims a diagnosis from a satellite image alone. A low vegetati
 
 The app ships with a fictional cooperative (Nzoia Valley Maize Cooperative, Trans-Nzoia, Kenya) and 8 maize fields. `data/` holds the shared simulated files (regenerate with `python3 scripts/make_sample_data.py`). If those files are missing, the app falls back to the built-in sample and the top field id changes.
 
-1. **Overview** — the dashboard says *Inspect first: Kapsara East Block (F3)*, score 95. Its simulated greenness fell about 46% against its own recent weeks while the other fields stayed steady, and the farmer reported leaf rolling. One other field (Kwanza Lower, F6) is a milder, medium-priority signal.
-2. **Field Map** — F3 is red with an anomaly marker. Click it → field panel → *Field details*. Outlines are simulated rectangles, not surveyed boundaries.
-3. **Field page** — six-part anomaly assessment (observed / why it matters / hypotheses / confidence / verify on site / next action), simulated index trend, weather context. Ask the Field Agent *"Why does this field need attention?"*.
-4. **Inspection** — open INS-1312 → *Start inspection* → tick checks → add a note (or dictate) → add a photo → choose *Issue confirmed*, write findings and a recommendation → *Complete inspection*. Choosing *Needs follow-up* instead keeps the field on the queue as a new visit.
-5. **Back to Overview** — high-priority alerts drop from 1 to 0, the queue re-ranks, the activity feed and field history show the completed inspection.
+1. **Overview** — the dashboard says *Inspect first: Kapsara East Block (F3)*, score 95. Its simulated greenness fell about 46% against its own recent weeks while the other fields stayed steady, and the farmer reported leaf rolling. One other field (Kwanza Lower, F6) is a milder, medium-priority signal. Press **Start visit**.
+2. **Field Map** — F3 is labeled and drawn in red. The map shows field outlines only, not a satellite image. Click it → *Start visit* or *Field details*.
+3. **Field page** — six-part anomaly assessment (observed / why it matters / hypotheses / confidence / verify on site / next action), simulated index trend, weather context, and a **case history** timeline. Ask the Field Agent *"Why does this field need attention?"*.
+4. **Visit** (`/inspections/INS-1312/visit`, phone layout) — *Start visit* → tick checks → add a note (or dictate) → add a photo → choose *Issue confirmed*, write findings → *Complete visit*. *Suggest an outcome* stays quiet until the report route from Area A exists; it never pretends to have seen the photo. Choosing *Needs follow-up* keeps the field on the queue as a new visit.
+5. **Back to Overview** — a **Queue updated** banner names the field that left and the field that is now first. High-priority alerts drop from 1 to 0. The case history on the field page shows the completed visit.
 6. **Field Agent** → *Summarize latest findings* separates what was confirmed on site from what is still a hypothesis.
 7. Optional: **Report observation** from the sidebar for another field → a new inspection task is created automatically.
+
+*Reset demo* is in the sidebar and under Overview, and on Settings. Use it before each run.
 
 *Settings → Reset demo data* restores the scenario before each run.
 
@@ -112,6 +114,7 @@ src/
     map/                  Field Map
     fields/[id]/          Field details + anomaly assessment
     inspections/          Prioritized queue + inspection workflow
+    inspections/[id]/visit  Phone-first adviser visit screen
     reports/              Field reports, new observation form
     settings/             Current user, integrations, reset demo
     api/agent/            Field Agent (LLM or demo mode)
