@@ -1,8 +1,8 @@
 {
-  "name": "farmsignal",
+  "name": "fieldloop",
   "version": "0.1.0",
   "private": true,
-  "description": "FarmSignal — turns field observations and potential anomalies into prioritized inspection tasks (hackathon MVP).",
+  "description": "FieldLoop — turns field observations and potential anomalies into prioritized inspection tasks (hackathon MVP).",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

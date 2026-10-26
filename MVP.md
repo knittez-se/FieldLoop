@@ -1,6 +1,6 @@
-# FarmSignal MVP
+# FieldLoop MVP
 
-This is the smallest version of FarmSignal that still tells the whole story. If these five steps work in the demo, we have a project. Everything else is optional.
+This is the smallest version of FieldLoop that still tells the whole story. If these five steps work in the demo, we have a project. Everything else is optional.
 
 Deadline: Sunday 25 October, 23:59. Aim to submit around 20:00.
 

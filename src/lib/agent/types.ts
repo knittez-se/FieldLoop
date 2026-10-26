@@ -80,4 +80,4 @@ export interface AgentResponse {
 }
 
 export const DISCLAIMER =
-  "AI-assisted summary based only on the records in FarmSignal. It cannot see photos or satellite images, may be wrong, and does not diagnose crop diseases. Verify on site and consult an agronomist before consequential decisions.";
+  "AI-assisted summary based only on the records in FieldLoop. It cannot see photos or satellite images, may be wrong, and does not diagnose crop diseases. Verify on site and consult an agronomist before consequential decisions.";

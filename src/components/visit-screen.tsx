@@ -301,7 +301,7 @@ export function VisitScreen({ inspectionId }: { inspectionId: string }) {
       )}
 
       {open && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 p-3 backdrop-blur lg:left-60">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 p-3 backdrop-blur lg:left-64">
           <div className="mx-auto max-w-lg">
             <Button className="min-h-12 w-full text-base" icon={Play} onClick={() => startInspection(task.id)}>
               Start visit
@@ -310,7 +310,7 @@ export function VisitScreen({ inspectionId }: { inspectionId: string }) {
         </div>
       )}
       {inProgress && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 p-3 backdrop-blur lg:left-60">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-white/95 p-3 backdrop-blur lg:left-64">
           <div className="mx-auto flex max-w-lg gap-2">
             <Button className="min-h-12 flex-1 text-base" icon={CircleCheck} onClick={finish}>
               Complete visit

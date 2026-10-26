@@ -254,8 +254,8 @@ export function createSeedState(
       photos: [],
     });
     lastInspectionDays.set(d.fieldId, i === 0 ? 26 : 15 + i);
-    ev(2, 7, d.fieldId, "anomaly_flagged", `Greenness decline (${fmtPct(d.ownChangePct)}) flagged by change detection`, "FarmSignal detection");
-    ev(2, 8, d.fieldId, "inspection_created", `Inspection created (${d.severity} severity)`, "FarmSignal rules", insId);
+    ev(2, 7, d.fieldId, "anomaly_flagged", `Greenness decline (${fmtPct(d.ownChangePct)}) flagged by change detection`, "FieldLoop detection");
+    ev(2, 8, d.fieldId, "inspection_created", `Inspection created (${d.severity} severity)`, "FieldLoop rules", insId);
   });
 
   // Scenario: farmer report on the top flagged field

@@ -36,6 +36,14 @@ export function activeInspections(state: AppState, now = new Date()) {
   return rankInspections(state, now).filter((r) => r.task.status !== "completed");
 }
 
+/**
+ * True when the loaded data has real Sentinel-2 readings from data/. Labels use this instead of
+ * settings.dataMode, which can be "real" while the built-in showcase is still (or again) loaded.
+ */
+export function hasRealData(state: AppState) {
+  return state.data.origin === "data_files" && state.fields.some((f) => f.vegetationIndex.series.some((r) => r.source === "real"));
+}
+
 export interface DashboardStats {
   totalFields: number;
   totalAreaHa: number;
@@ -193,7 +201,7 @@ export function todayBriefing(state: AppState, now = new Date()): { headline: st
   const total = state.fields.length;
   const fieldsNeeding = new Set(queue.map((r) => r.task.fieldId)).size;
   if (queue.length === 0) {
-    return { headline: `All ${total} fields look normal this week.`, detail: "No visits needed. FarmSignal keeps watching the satellite data." };
+    return { headline: `All ${total} fields look normal this week.`, detail: "No visits needed. FieldLoop keeps watching the satellite data." };
   }
   const top = queue[0];
   const anomaly = state.anomalies.find((a) => top.task.anomalyIds.includes(a.id));

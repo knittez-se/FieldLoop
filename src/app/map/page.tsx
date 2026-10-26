@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, Calendar, Ruler, X } from "lucide-react";
 import { useAppState } from "@/lib/store";
-import { farmFor, fieldAnomalies, fieldStatus, mapStatus } from "@/lib/selectors";
+import { farmFor, fieldAnomalies, fieldStatus, hasRealData, mapStatus } from "@/lib/selectors";
 import { relativeTime, cn } from "@/lib/format";
 import { ANOMALY_TYPE_LABEL } from "@/lib/labels";
 import type { Priority } from "@/lib/types";
@@ -36,7 +36,7 @@ export default function MapPage() {
         description="Select a field or marker to see why it was flagged and what to do next."
         actions={
           <DemoNotice>
-            {state.settings.dataMode === "real"
+            {hasRealData(state)
               ? "Real field outlines near Kitale. Not a satellite image."
               : "Showcase data (simulated) in Trans-Nzoia, Kenya. Not a satellite image."}
           </DemoNotice>

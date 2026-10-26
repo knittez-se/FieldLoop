@@ -16,13 +16,13 @@ Researched 23 October 2026 from the products' public pages (sources at the end).
 
 Note: the README previously named "CropSense, OpenFarm and Open Farm Analytics". We could not confirm these as satellite crop-monitoring products. Use the verified names above in the pitch.
 
-## Where FarmSignal fits
+## Where FieldLoop fits
 
 Everyone covers **seeing** the problem (satellite alerts) or **answering** a farmer's question (chat, photo diagnosis). Nobody we found closes the loop for a cooperative with few advisers:
 
 > **Signal → which field first and why → what to check → adviser's report → AI reads it → queue re-ranks → case history.**
 
-EOSDA comes closest (leaderboard + scouting reports), but it ranks by crop performance and stops when the report is filed. FarmSignal's angle: **the work after the alert, explained in plain language, with AI that reads the field report.**
+EOSDA comes closest (leaderboard + scouting reports), but it ranks by crop performance and stops when the report is filed. FieldLoop's angle: **the work after the alert, explained in plain language, with AI that reads the field report.**
 
 Expectations set by the competitors (judges may know them):
 
@@ -80,7 +80,7 @@ Added 23 October 2026 after the team discussion: (1) a showcase dataset that sho
 - **The adviser gap is the problem we solve.** Kenya has roughly **1 agricultural extension worker per 5,000 farmers**, against a recommended 1 per 400 (Farm Africa). An adviser cannot visit every field, so *which field first* is the core question.
 - **Small farms matter for food supply.** Farms under 2 hectares produce about **a third of the world's food on about 12% of the farmland** (FAO, 2021).
 - **The users already exist at scale.** One Acre Fund alone served **5.5 million farmers in 2024** in 10 African countries through field officers who live in the farming communities, and already uses remote sensing and digital tools. These field-officer organisations are our customer.
-- **The "missing middle".** GEOGLAM's Crop Monitor gives **monthly, national/regional** early warning for food-insecure countries (used by FEWS NET, WFP and FAO). Plantix and FarmerChat help **one farmer at a time**. Nothing plans the **field officer's week** across hundreds of small fields. That is FarmSignal.
+- **The "missing middle".** GEOGLAM's Crop Monitor gives **monthly, national/regional** early warning for food-insecure countries (used by FEWS NET, WFP and FAO). Plantix and FarmerChat help **one farmer at a time**. Nothing plans the **field officer's week** across hundreds of small fields. That is FieldLoop.
 
 ## How competitors onboard users
 
@@ -93,7 +93,7 @@ Added 23 October 2026 after the team discussion: (1) a showcase dataset that sho
 
 ## Proposal 1 — Showcase data (default in the prototype)
 
-A clearly labeled simulated dataset designed to show what FarmSignal is for. Real Sentinel-2 data stays available as a switch ("Showcase" / "Real data from Kitale").
+A clearly labeled simulated dataset designed to show what FieldLoop is for. Real Sentinel-2 data stays available as a switch ("Showcase" / "Real data from Kitale").
 
 What the showcase should make obvious in seconds:
 

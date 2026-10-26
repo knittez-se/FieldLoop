@@ -1,5 +1,5 @@
 /**
- * SHOWCASE DATA — all values are simulated, designed to show what FarmSignal is for.
+ * SHOWCASE DATA — all values are simulated, designed to show what FieldLoop is for.
  * 40 smallholder plots in 3 fictional villages around Kitale (Trans-Nzoia, Kenya).
  * Stories planted in the data:
  *  - Kapsara: a problem SPREADS — KAP-08 declines for 4 weeks, its neighbours KAP-07/KAP-09 start 2 weeks later

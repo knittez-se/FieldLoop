@@ -5,7 +5,7 @@ import { useMemo, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Info, Sprout } from "lucide-react";
 import { useAppState } from "@/lib/store";
-import { activeInspections, adviserName, changeGroups, greennessChange, impactSummary, mapStatus, todayBriefing } from "@/lib/selectors";
+import { activeInspections, adviserName, changeGroups, greennessChange, hasRealData, impactSummary, mapStatus, todayBriefing } from "@/lib/selectors";
 import { INSPECTION_STATUS_LABEL } from "@/lib/labels";
 import { cn, formatDate } from "@/lib/format";
 import type { Priority } from "@/lib/types";
@@ -79,7 +79,7 @@ export default function TodayPage() {
       <p className="flex items-start gap-2 text-sm text-stone-500">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          Based on {state.settings.dataMode === "real" ? "Sentinel-2 satellite" : "simulated"} greenness readings for {state.fields.length} fields from {d.range}.
+          Based on {hasRealData(state) ? "Sentinel-2 satellite" : "simulated"} greenness readings for {state.fields.length} fields from {d.range}.
           {d.simulatedReadings > 0 && d.simulatedReadings < d.totalReadings && ` ${d.simulatedReadings} readings are simulated for the demo.`}
         </span>
       </p>

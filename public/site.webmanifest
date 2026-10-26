@@ -1,6 +1,6 @@
 {
-  "name": "FarmSignal",
-  "short_name": "FarmSignal",
+  "name": "FieldLoop",
+  "short_name": "FieldLoop",
   "start_url": "/",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },

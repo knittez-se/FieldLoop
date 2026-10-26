@@ -34,7 +34,7 @@ import type {
   QueueEntry,
 } from "./types";
 
-const STORAGE_KEY = "farmsignal:state:v1";
+const STORAGE_KEY = "fieldloop:state:v1";
 
 let state: AppState | null = null;
 let persistError: string | null = null;
@@ -496,7 +496,7 @@ export function submitObservation(input: SubmitObservationInput): SubmitObservat
       anomalies = [anomaly, ...anomalies];
       inspections = [task, ...inspections];
       activity = [
-        { id: newId("act"), at, fieldId: input.fieldId, type: "inspection_created", message: "Inspection created from ground report", actor: "FarmSignal rules", inspectionId: task.id },
+        { id: newId("act"), at, fieldId: input.fieldId, type: "inspection_created", message: "Inspection created from ground report", actor: "FieldLoop rules", inspectionId: task.id },
         ...activity,
       ];
     }

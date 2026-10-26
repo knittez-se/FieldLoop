@@ -6,7 +6,7 @@ import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = {
-  title: "FarmSignal — field operations for cooperatives",
+  title: "FieldLoop — field operations for cooperatives",
   description: "Turns field observations and potential anomalies into prioritized inspection tasks.",
   icons: {
     icon: [

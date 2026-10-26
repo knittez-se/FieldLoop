@@ -1,5 +1,5 @@
 /**
- * Core domain types for FarmSignal.
+ * Core domain types for FieldLoop.
  *
  * Every piece of data carries an explicit `source` so the UI can always tell the
  * user whether something was observed, simulated, model-generated or confirmed.

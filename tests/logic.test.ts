@@ -10,7 +10,7 @@ import { scoreInspection, levelForScore } from "../src/lib/priority";
 import { analyzeReportDemo, type ReportInput } from "../src/lib/agent/report";
 import { createSeedState } from "../src/lib/demo-data";
 import { BUILTIN_FIELD_DATA } from "../src/lib/builtin-field-data";
-import { activeInspections, changeGroups, dashboardStats, greennessChange, greennessTimeline, impactSummary, lastQueueChange, todayBriefing, weeklyCapacity } from "../src/lib/selectors";
+import { activeInspections, changeGroups, dashboardStats, greennessChange, greennessTimeline, hasRealData, impactSummary, lastQueueChange, todayBriefing, weeklyCapacity } from "../src/lib/selectors";
 
 const weeks = (n: number, end = "2026-10-19") =>
   Array.from({ length: n }, (_, i) => new Date(new Date(end).getTime() - (n - 1 - i) * 7 * 86_400_000).toISOString().slice(0, 10));
@@ -210,6 +210,16 @@ test("data/ files follow the contract and flag only the planted problem field", 
   assert.equal(flagged[0].severity, "high");
   // the flagged field must contain the planted (simulated) readings, so the app labels it
   assert.equal(flagged[0].allReal, false);
+  // the app labels these files as real satellite data
+  const payload = { origin: "data_files" as const, fields, weather, warnings };
+  assert.equal(hasRealData(createSeedState(payload)), true);
+});
+
+test("showcase data is never labeled as real, whatever the data-mode setting says", () => {
+  const s = createSeedState(BUILTIN_FIELD_DATA, new Date("2026-10-23T12:00:00Z"), {
+    settings: { currentUserId: "adv-grace", liveWeather: false, dataMode: "real" },
+  });
+  assert.equal(hasRealData(s), false);
 });
 
 // --- round 2: onboarding, briefing, capacity, time-lapse ----------------------

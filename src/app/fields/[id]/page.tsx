@@ -45,7 +45,8 @@ export default function FieldPage() {
   const history = state.inspections.filter((t) => t.fieldId === field.id).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const observations = state.observations.filter((o) => o.fieldId === field.id);
   const s = field.vegetationIndex.series;
-  const change = s.length > 3 ? Math.round(((s[s.length - 1].value - s[s.length - 4].value) / s[s.length - 4].value) * 100) : 0;
+  const change = s.length > 3 && s[s.length - 4].value > 0 ? Math.round(((s[s.length - 1].value - s[s.length - 4].value) / s[s.length - 4].value) * 100) : 0;
+  const crop = field.crop.charAt(0).toUpperCase() + field.crop.slice(1);
 
   return (
     <div className="space-y-6">
@@ -78,7 +79,7 @@ export default function FieldPage() {
 
       {/* Key facts */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <Fact icon={Sprout} label="Crop" value={field.variety ? `Maize · ${field.variety}` : "Maize"} />
+        <Fact icon={Sprout} label="Crop" value={field.variety ? `${crop} · ${field.variety}` : crop} />
         <Fact icon={Leaf} label="Growth stage" value={field.growthStage} />
         <Fact icon={Ruler} label="Approx. area" value={`${field.areaHa} ha`} />
         <Fact icon={Calendar} label="Last observation" value={relativeTime(field.lastObservationAt)} />

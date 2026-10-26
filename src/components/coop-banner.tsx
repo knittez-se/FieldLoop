@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Plus, RotateCcw, Sprout } from "lucide-react";
-import { impactSummary, weeklyCapacity } from "@/lib/selectors";
+import { hasRealData, impactSummary, weeklyCapacity } from "@/lib/selectors";
 import type { AppState } from "@/lib/types";
 import { cn } from "@/lib/format";
 
@@ -14,7 +14,7 @@ export function CoopBanner({ state, className, isPageTitle }: { state: AppState;
   const advisers = weeklyCapacity(state).advisers;
   const farms = new Set(state.fields.map((f) => f.farmId)).size;
   const crops = [...new Set(state.fields.map((f) => f.crop))].map((c) => c[0].toUpperCase() + c.slice(1));
-  const real = state.settings.dataMode === "real";
+  const real = hasRealData(state);
 
   return (
     <section

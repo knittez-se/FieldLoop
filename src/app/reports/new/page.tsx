@@ -46,7 +46,7 @@ function ObservationForm() {
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (!fieldId) return setError("Select a field.");
+    if (!fieldId || !state!.fields.some((f) => f.id === fieldId)) return setError("Select a field.");
     if (!category) return setError("Choose a category.");
     if (description.trim().length < 5 && voice.trim().length < 5) return setError("Describe what you saw (or dictate it).");
     setError(null);

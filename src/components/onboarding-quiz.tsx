@@ -60,7 +60,7 @@ export function OnboardingQuiz({ state }: { state: AppState }) {
     <div className="fixed inset-0 z-[1300] overflow-y-auto bg-stone-50" role="dialog" aria-modal="true" aria-labelledby="quiz-title">
       <div className="mx-auto flex min-h-full max-w-3xl flex-col px-4 py-6 sm:py-10">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <img src="/brand/farmsignal-horizontal.svg" alt="FarmSignal" width={130} height={28} className="h-7 w-auto" />
+          <img src="/brand/fieldloop-horizontal.svg" alt="FieldLoop" width={130} height={28} className="h-7 w-auto" />
           <button type="button" onClick={() => finish(DEFAULT_PROFILE)} className="text-sm font-medium text-stone-600 underline-offset-2 hover:underline">
             Skip — use demo farms
           </button>
@@ -164,7 +164,7 @@ export function OnboardingQuiz({ state }: { state: AppState }) {
           )}
 
           {current === "done" && (
-            <Step title="You're set up" hint="Here is what FarmSignal will watch for you.">
+            <Step title="You're set up" hint="Here is what FieldLoop will watch for you.">
               <div className="rounded-xl border border-brand-200 bg-white p-4 text-sm leading-relaxed text-stone-800">
                 <strong>{region.name}, {region.country}</strong> · {pickedFields.length} plots · {hectares.toFixed(1)} ha
                 {cropSummary && <> · {cropSummary}</>}
@@ -177,7 +177,7 @@ export function OnboardingQuiz({ state }: { state: AppState }) {
               <fieldset className="mt-5">
                 <legend className="mb-2 text-sm font-semibold text-stone-700">Data</legend>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <Choice active={mode === "showcase"} onClick={() => setMode("showcase")} label="Showcase data" hint="Simulated. Shows everything FarmSignal can find." />
+                  <Choice active={mode === "showcase"} onClick={() => setMode("showcase")} label="Showcase data" hint="Simulated. Shows everything FieldLoop can find." />
                   <Choice active={mode === "real"} onClick={() => setMode("real")} label="Real data (Kitale)" hint="8 real plots, real Sentinel-2 and rainfall." />
                 </div>
               </fieldset>

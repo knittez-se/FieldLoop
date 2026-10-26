@@ -5,7 +5,7 @@
 import { HYPOTHESIS_LABEL, REPORT_DISCLAIMER, type Hypothesis, type ReportAnalysis, type ReportInput } from "./report";
 import { AGENT_MODES, DISCLAIMER, type AgentContext, type AgentMode, type AgentResponse, type AgentSection } from "./types";
 
-const SYSTEM_PROMPT = `You are the FarmSignal Field Agent, assisting agricultural field advisers who monitor maize fields.
+const SYSTEM_PROMPT = `You are the FieldLoop Field Agent, assisting agricultural field advisers who monitor smallholder crop fields (mostly maize).
 Rules:
 - Use ONLY the JSON context provided. Do not invent measurements, dates or findings.
 - You cannot see photos or satellite images. If a photo is attached, say it was not analyzed.
@@ -80,7 +80,7 @@ function parseResponse(text: string): { title: string; sections: AgentSection[] 
 // Report analysis ("the AI reads the report")
 
 
-const REPORT_SYSTEM_PROMPT = `You help a maize field adviser turn their own visit notes into a structured inspection report.
+const REPORT_SYSTEM_PROMPT = `You help a crop field adviser turn their own visit notes into a structured inspection report.
 Rules:
 - Use ONLY the adviser's notes, checks and draft findings in the JSON. Never add facts, numbers or observations they did not write.
 - You cannot see photos. Never claim to have analyzed one.
