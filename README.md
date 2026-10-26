@@ -1,50 +1,68 @@
-# FarmSignal
+# FieldLoop
 
 **From satellite alert to fixed field.**
 
-Built for the Polaris Global Hackathon (October 2026).
+FieldLoop is an AI field operations assistant for small farming cooperatives. It uses free satellite imagery and weather data to find fields that have changed, ranks them by urgency, and turns each alert into a concrete visit for a field adviser. The adviser reports back by voice note or photo, and FieldLoop tracks the case until it is resolved. Every alert ends with someone checking the plants: that is the loop in the name.
 
-Working on this? Start with [MVP.md](MVP.md) for the scope, the data file we share, and who builds what.
+Built for the Polaris Global Hackathon (October 2026) by Dominik Knitter and Ivan Ivanovic.
 
-FarmSignal is an AI field operations assistant for small farming cooperatives. It uses free satellite imagery and weather data to find fields that have changed, ranks them by urgency, and turns each alert into a concrete visit for a field advisor. The advisor reports back by voice note or photo, and FarmSignal tracks the case until it is resolved.
+![Today screen: first visit of the day, greenness change and the ranked visit list](docs/screenshots/overview-desktop.png)
+
+## At a glance
+
+- **Problem:** satellites can show that a field looks stressed, but a cooperative with hundreds of small plots and a few advisers still has to decide where to go first, what to look for, and make sure every alert is followed up.
+- **What we built:** a working web app that runs the whole loop: change detection on real Sentinel-2 data → a ranked visit queue → a phone-first visit screen → an AI that reads the adviser's notes → a re-ranked queue and a case history per field.
+- **Real data:** 8 real farm plots near Kitale, Kenya, with real Sentinel-2 greenness (NDVI) and real rainfall. One problem is planted and clearly labeled as simulated (details below).
+- **Honest by design:** a low greenness reading means "something changed here, go and look", never "this is the cause". Every simulated value is labeled in the app, and the AI never claims to have looked at a photo or diagnosed a disease.
 
 ## The problem
 
 Satellites can already tell a farmer that a field looks stressed. What they cannot do is walk to the field.
 
-A cooperative may look after hundreds of small plots with only a few advisors. The hard part is not seeing a red patch on a map. It is deciding which field to visit first, knowing what to look for once there, and making sure every alert ends with someone actually checking the plants. Today that follow-up often lives in spreadsheets, phone calls and memory.
+A cooperative may look after hundreds of small plots with only a few advisers. The hard part is not seeing a red patch on a map. It is deciding which field to visit first, knowing what to look for once there, and making sure every alert ends with someone actually checking the plants. Today that follow-up often lives in spreadsheets, phone calls and memory.
 
-## What FarmSignal does
+## What FieldLoop does
 
 1. **Spots changes.** Compares each field's satellite crop health (NDVI) against its own history and its neighbors, and combines it with recent weather.
 2. **Ranks the fields.** A transparent rule-based score produces a prioritized inspection queue: which field to visit first, why it was flagged, and how uncertain the signal is.
-3. **Plans the visit.** For each flagged field it suggests what the advisor should check on site, for example signs of water stress versus pests.
-4. **Closes the loop.** The advisor records notes (typed or dictated), photos and confirmed findings. FarmSignal updates the field's status, re-ranks the queue and keeps a record of what was checked and what happened.
-5. **Field Agent.** An assistant embedded in each field and inspection summarizes why a field needs attention, builds checklists and questions, and turns observations into structured reports — always separating observed facts, confirmed findings and unverified hypotheses.
-
-FarmSignal never claims a diagnosis from a satellite image alone. A low vegetation reading means "something changed here, go and look", not "this is the cause".
+3. **Plans the visit.** For each flagged field it suggests what the adviser should check on site, for example signs of water stress versus pests.
+4. **Closes the loop.** The adviser records notes (typed or dictated), photos and confirmed findings. FieldLoop updates the field's status, re-ranks the queue and keeps a record of what was checked and what happened.
+5. **Field Agent.** An assistant embedded in each field and inspection summarizes why a field needs attention, builds checklists and questions, and turns observations into structured reports, always separating observed facts, confirmed findings and unverified hypotheses.
 
 ## Demo flow (3 minutes)
+
+Run the app (see [Run it locally](#run-it-locally)) and open http://localhost:3000.
 
 The app opens with **real data**: 8 real farm plots west of Kitale, Kenya, with real Sentinel-2 greenness and real rainfall. One problem is planted: the last 3 readings of **F1 (Kapsara East Block)** are lowered and labeled `simulated`, because real fields all dip together before harvest and nothing would stand out otherwise. 77 of 80 greenness readings are real. The cooperative, farmers, advisers and workflow history are fictional.
 
 1. **Setup quiz** (under a minute, skippable): role → region (Trans-Nzoia) → crops → tap your plots on the map → team size. The end screen shows *Real data (Kitale)* selected.
-2. **Today** — *First visit today*: Kapsara East Block with priority score 95 of 100; its greenness fell from 0.47 to 0.21 while the other fields rose, and a farmer reported a problem. Next to it, *Greenness change, last 3 weeks*: 75% of fields need no visit; one field is falling fast, seven are rising. Below, all fields ranked next to the map. Press **Start visit**.
-3. **Map → Greenness time-lapse** — press play: all fields fade in the dry weeks of September, recover after the October rains, and only Kapsara East Block keeps falling.
-4. **Field page** — *Why flagged* and *What to check* first; the full evidence opens on demand. The greenness chart marks the 3 simulated readings in orange, the rest are real Sentinel-2. Case history and Field Agent below.
-5. **Visit** (phone layout) — *Start visit* → tick checks → note (type or dictate) → photo → *Suggest an outcome* (AI reads the note) → edit → *Complete visit*. The suggestion only restates the note and does not look at the photo. Example note: *"Found larvae and fresh feeding damage in the whorls on 9 of 20 plants on the east side."* → suggested outcome *Issue confirmed, re-scout in 7 days*.
-6. **Back to Today** — a **Queue updated** banner: Kapsara East Block left the queue, Kapsara West Block is now #1.
+2. **Today:** *First visit today* is Kapsara East Block with priority score 95 of 100. Its greenness fell from 0.47 to 0.21 while the other fields rose, and a farmer reported a problem. Next to it, *Greenness change, last 3 weeks*: 75% of fields need no visit; one field is falling fast, seven are rising. Below, all fields are ranked next to the map. Press **Start visit**.
+3. **Map → Greenness time-lapse:** press play. All fields fade in the dry weeks of September and recover after the October rains; only Kapsara East Block keeps falling.
+4. **Field page:** *Why flagged* and *What to check* come first; the full evidence opens on demand. The greenness chart marks the 3 simulated readings in orange, the rest are real Sentinel-2. Case history and Field Agent are below.
+5. **Visit** (phone layout): *Start visit* → tick checks → note (type or dictate) → photo → *Suggest an outcome* (the AI reads the note) → edit → *Complete visit*. The suggestion only restates the note and does not look at the photo. Example note: *"Found larvae and fresh feeding damage in the whorls on 9 of 20 plants on the east side."* → suggested outcome *Issue confirmed, re-scout in 7 days*.
+6. **Back to Today:** a **Queue updated** banner shows that Kapsara East Block left the queue and Kapsara West Block is now #1.
 7. Optional: **Report observation** for another field → a new visit is created automatically.
 
-**Showcase mode** (optional): *Settings → Showcase data* switches to 40 simulated plots in 3 villages, built to show more cases (a problem that spreads, a dry-spell cluster, a harvest dry-down that is correctly *not* flagged, a field that recovered after a visit). Everything in it is simulated and labeled so.
+**Showcase mode** (optional): *Settings → Showcase data* switches to 40 simulated plots in 3 villages with 4 crops, built to show more cases: a problem that spreads, a dry-spell cluster, a harvest dry-down that is correctly *not* flagged, and a field that recovered after a visit. Everything in it is simulated and labeled so.
 
 *Reset demo* (sidebar, Settings) restores the scenario before each run. *Settings → Retake setup quiz* starts over.
 
-![Overview](docs/screenshots/overview-desktop.png)
+| Phone: Today | Phone: field visit |
+| --- | --- |
+| ![Today on a phone](docs/screenshots/overview-phone.png) | ![Visit screen on a phone](docs/screenshots/visit-phone.png) |
 
-![Phone visit](docs/screenshots/visit-phone.png)
+![Field page with why flagged, what to check and the case history](docs/screenshots/field-desktop.png)
 
-![Case history](docs/screenshots/field-desktop.png)
+## AI in FieldLoop
+
+| Where | What the AI does | What it never does |
+| --- | --- | --- |
+| **Suggest an outcome** (visit screen, `/api/process-report`) | Reads the adviser's notes and ticked checks, suggests an outcome (issue confirmed / no issue found / needs follow-up), summarizes the findings in the adviser's own words, lists which causes the notes support or rule out, and proposes a follow-up. | Add facts the adviser did not write, look at photos, or save anything without the adviser confirming. |
+| **Field Agent** (field and inspection pages, `/api/agent`) | Explains why a field needs attention, builds a visit checklist and questions, structures a report, and summarizes findings. Every answer is split into observed / confirmed / interpretation / hypothesis / action. | Diagnose a disease or pest from remote data, or invent measurements. |
+
+Both use Claude through the Anthropic API when `ANTHROPIC_API_KEY` is set. Without a key they run in a clearly labeled **demo mode**: transparent keyword rules for the report and deterministic summaries built only from the field's records. If the API call fails, the app falls back to demo mode instead of breaking.
+
+Change detection and the priority score are deliberately **not** AI: they are simple, documented rules so an adviser can see exactly why a field was ranked first (*Visits → open a visit → Priority breakdown*).
 
 ## Field data (shared with the data script)
 
@@ -91,11 +109,11 @@ Data side (`scripts/`, writes the files in `data/`):
 
 App side:
 
-- Next.js (App Router) + TypeScript + React
+- Next.js 15 (App Router) + TypeScript + React 19
 - Tailwind CSS v4, Lucide icons
 - Leaflet + OpenStreetMap tiles for the field map (SVG fallback if tiles or Leaflet are unavailable)
 - Next.js route handlers: `/api/field-data` (reads `data/`), `/api/agent` (Field Agent), `/api/process-report` (report analysis), `/api/weather` (optional live Open-Meteo)
-- Optional: Anthropic API (server-side only)
+- Optional: Anthropic API (server-side only; the key never reaches the browser)
 - Persistence: browser `localStorage` (prototype)
 
 ## Run it locally
@@ -107,16 +125,16 @@ cd Polaris-Hackathon---FarmSignal
 
 ### App
 
-Requires Node.js 20+.
+Requires Node.js 20 or newer.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000. No API key is needed; the AI features then run in demo mode.
 
-Optional — real LLM for the Field Agent:
+Optional: use a real LLM for the AI features:
 
 ```bash
 cp .env.example .env.local
@@ -126,9 +144,13 @@ cp .env.example .env.local
 
 Never commit `.env.local` or real keys.
 
-Production build check: `npm run build && npm start`.
+Checks:
 
-Logic tests (change detection, data parsers, priority score, report analysis): `npm run test:logic`.
+```bash
+npm run typecheck    # TypeScript
+npm run test:logic   # 22 tests: change detection, data parsers, priority score, report analysis, briefing
+npm run build        # production build (then npm start)
+```
 
 ### Data scripts
 
@@ -148,47 +170,50 @@ The field outlines in `data/fields.geojson` were traced by hand and are not made
 
 ```
 src/
-  app/                    pages (App Router)
-    page.tsx              Overview dashboard
-    map/                  Field Map
-    fields/[id]/          Field details + anomaly assessment
-    inspections/          Prioritized queue + inspection workflow
+  app/                      pages (App Router)
+    page.tsx                Today: first visit, greenness change, ranked visits + map
+    map/                    Field Map + greenness time-lapse
+    fields/[id]/            Field page: why flagged, what to check, case history, evidence
+    inspections/            Visit queue + inspection details
     inspections/[id]/visit  Phone-first adviser visit screen
-    reports/              Field reports, new observation form
-    settings/             Current user, integrations, reset demo
-    api/agent/            Field Agent (LLM or demo mode)
-    api/weather/          Open-Meteo proxy
-    api/field-data/       Reads the data/ files
-  components/             UI components (map, agent, inputs, cards)
+    reports/                Inspection reports and observations; new observation form
+    settings/               Current user, data source, integrations, reset demo
+    api/field-data/         Reads the data/ files
+    api/agent/              Field Agent (LLM or demo mode)
+    api/process-report/     Reads the adviser's report (LLM or demo rules)
+    api/weather/            Open-Meteo proxy
+  components/               UI components (map, time-lapse, visit screen, agent, quiz, inputs)
   lib/
-    types.ts              Domain model (Farm, Field, Anomaly, InspectionTask, ...)
-    field-data.ts         Data contract types + CSV/GeoJSON parsers
-    builtin-field-data.ts Built-in simulated sample (used when data/ is empty)
-    detection.ts          Rule-based change detection (own history + neighbors)
-    demo-data.ts          Builds the app state from field data + fictional workflow history
-    store.ts              Data-access layer + actions (localStorage)
-    priority.ts           Documented rule-based priority score
-    selectors.ts          Derived views / dashboard stats
-    agent/                Agent context builder, demo agent, LLM client
-    services/             Live weather lookup (Open-Meteo)
-scripts/                  Data scripts (Python): satellite NDVI, rainfall, sample data
-data/                     The shared files the app reads
+    types.ts                Domain model (Farm, Field, Anomaly, InspectionTask, ...)
+    field-data.ts           Data contract types + CSV/GeoJSON parsers
+    builtin-field-data.ts   Showcase data (simulated), used when data/ is not available
+    detection.ts            Rule-based change detection (own history + neighbors)
+    priority.ts             Documented rule-based priority score
+    demo-data.ts            Builds the app state from field data + fictional workflow history
+    store.ts                Data-access layer + actions (localStorage)
+    selectors.ts            Derived views: queue, briefing, impact, time-lapse
+    onboarding.ts           Setup quiz options
+    agent/                  Field Agent context, demo agent, LLM client, report analysis
+    services/               Live weather lookup (Open-Meteo)
+scripts/                    Data scripts (Python): satellite NDVI, rainfall, sample data
+data/                       The shared files the app reads
+tests/                      Logic tests (npm run test:logic)
 ```
 
 To move to a real backend, keep the action signatures in `store.ts` and replace `load`/`persist` with API calls.
 
 ## Limitations
 
-- Sentinel-2 pixels cover about 10 by 10 meters. Very small or mixed-crop plots are hard to judge from space, so FarmSignal compares whole fields and changes over time rather than pinpointing individual sick patches.
+- Sentinel-2 pixels cover about 10 by 10 meters. Very small or mixed-crop plots are hard to judge from space, so FieldLoop compares whole fields and changes over time rather than pinpointing individual sick patches.
 - Clouds, especially in rainy seasons, can hide fields for days or weeks.
-- Data is stored in each browser's localStorage: it is not shared between devices or team members, is limited to ~5 MB (photos are downscaled), and is lost when site data is cleared.
+- Data is stored in each browser's localStorage: it is not shared between devices or team members, is limited to about 5 MB (photos are downscaled), and is lost when site data is cleared.
 - There is no login; the "current user" is chosen in Settings.
 - Voice dictation depends on browser support (not available in Firefox).
-- This is a 72-hour prototype. It has not been tested with real farmers or advisors, and its recommendations are not agronomic advice.
+- This is a 72-hour prototype. It has not been tested with real farmers or advisers, and its recommendations are not agronomic advice.
 
 ## How this relates to existing tools
 
-Satellite crop monitoring and farm advice already exist: EOSDA Crop Monitoring (change alerts, a field leaderboard, scouting reports), OneSoil (free NDVI maps that flag problem spots), Farmonaut (WhatsApp-based satellite reports for smallholders), Cropin and Farmforce (field-team and outgrower management), Plantix (photo diagnosis) and Digital Green's FarmerChat (voice and WhatsApp advice). We are not trying to build a better map or a better chatbot. FarmSignal focuses on the workflow after the alert for a cooperative with few advisers: which field to visit first and why, what to check, an AI that reads the adviser's report, and tracking each case to resolution. See [docs/COMPETITOR_RESEARCH.md](docs/COMPETITOR_RESEARCH.md). We have only reviewed these products' public websites, so some of their features may go further than we describe.
+Satellite crop monitoring and farm advice already exist: EOSDA Crop Monitoring (change alerts, a field leaderboard, scouting reports), OneSoil (free NDVI maps that flag problem spots), Farmonaut (WhatsApp-based satellite reports for smallholders), Cropin and Farmforce (field-team and outgrower management), Plantix (photo diagnosis) and Digital Green's FarmerChat (voice and WhatsApp advice). We are not trying to build a better map or a better chatbot. FieldLoop focuses on the workflow after the alert for a cooperative with few advisers: which field to visit first and why, what to check, an AI that reads the adviser's report, and tracking each case to resolution. See [docs/COMPETITOR_RESEARCH.md](docs/COMPETITOR_RESEARCH.md). We have only reviewed these products' public websites, so some of their features may go further than we describe.
 
 ## Roadmap
 
@@ -196,9 +221,9 @@ Ideas beyond the hackathon, not built yet:
 
 - Automatic weekly data refresh instead of running the scripts by hand
 - Shared database and accounts for teams
-- Offline use for advisors with weak internet
+- Offline use for advisers with weak internet
 - Support for more crops and regions
-- Advisor-friendly voice input in local languages
+- Adviser-friendly voice input in local languages
 - Tracking whether an intervention actually improved the field
 - Testing with a real cooperative to validate the workflow
 
