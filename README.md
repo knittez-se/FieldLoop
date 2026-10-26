@@ -119,8 +119,8 @@ App side:
 ## Run it locally
 
 ```bash
-git clone https://github.com/knittez-se/Polaris-Hackathon---FarmSignal.git
-cd Polaris-Hackathon---FarmSignal
+git clone https://github.com/knittez-se/FieldLoop.git
+cd FieldLoop
 ```
 
 ### App
