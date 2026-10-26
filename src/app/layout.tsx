@@ -8,10 +8,18 @@ import { AppShell } from "@/components/app-shell";
 export const metadata: Metadata = {
   title: "FarmSignal — field operations for cooperatives",
   description: "Turns field observations and potential anomalies into prioritized inspection tasks.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0e3d21",
+  themeColor: "#1E3A2B",
 };
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-figtree" });

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Sprout } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { completeOnboarding, setDataMode } from "@/lib/store";
 import { candidateFields, CROPS, DEFAULT_PROFILE, REGIONS, regionById, type OnboardingProfile } from "@/lib/onboarding";
 import type { AppState } from "@/lib/types";
@@ -60,12 +60,7 @@ export function OnboardingQuiz({ state }: { state: AppState }) {
     <div className="fixed inset-0 z-[1300] overflow-y-auto bg-stone-50" role="dialog" aria-modal="true" aria-labelledby="quiz-title">
       <div className="mx-auto flex min-h-full max-w-3xl flex-col px-4 py-6 sm:py-10">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
-              <Sprout className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-semibold tracking-tight">FarmSignal</span>
-          </div>
+          <img src="/brand/farmsignal-horizontal.svg" alt="FarmSignal" width={130} height={28} className="h-7 w-auto" />
           <button type="button" onClick={() => finish(DEFAULT_PROFILE)} className="text-sm font-medium text-stone-600 underline-offset-2 hover:underline">
             Skip — use demo farms
           </button>

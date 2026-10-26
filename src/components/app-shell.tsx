@@ -72,9 +72,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   void getLastFieldSync;
 
   const logo = (
-    <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-forest">
-      <Sprout className="h-6 w-6 text-emerald-600" />
-      FarmSignal
+    <Link href="/" className="inline-flex" aria-label="FarmSignal, go to Today">
+      <img src="/brand/farmsignal-horizontal.svg" alt="FarmSignal" width={130} height={28} className="h-7 w-auto" />
     </Link>
   );
 
